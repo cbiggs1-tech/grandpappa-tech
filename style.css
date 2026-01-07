@@ -1,0 +1,310 @@
+/* GRANDPAPA.NET - Retro 1980s Arcade Style */
+
+@font-face {
+    font-family: 'VT323';
+    src: local('VT323'), local('Courier New'), local('monospace');
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', 'VT323', monospace;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.crt {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.crt::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 0%,
+        rgba(0, 0, 0, 0.4) 100%
+    );
+    pointer-events: none;
+    z-index: 999;
+}
+
+main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px dashed #0f0;
+    padding-bottom: 20px;
+}
+
+.logo {
+    font-size: 8px;
+    line-height: 1;
+    color: #0f0;
+    text-shadow: 0 0 10px #0f0;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+@media (max-width: 600px) {
+    .logo {
+        font-size: 5px;
+    }
+}
+
+.tagline {
+    margin-top: 15px;
+    color: #ff0;
+    text-shadow: 0 0 10px #ff0;
+    animation: flicker 3s infinite;
+}
+
+@keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.8; }
+    97% { opacity: 1; }
+    98% { opacity: 0.9; }
+}
+
+/* Navigation */
+nav {
+    text-align: center;
+    margin: 20px 0;
+    padding: 10px 0;
+    border-top: 1px solid #0f0;
+    border-bottom: 1px solid #0f0;
+}
+
+nav span {
+    margin: 0 10px;
+}
+
+nav a {
+    color: #0ff;
+    text-decoration: none;
+    text-shadow: 0 0 5px #0ff;
+}
+
+nav a:hover {
+    color: #fff;
+    text-shadow: 0 0 15px #0ff;
+}
+
+/* Content */
+.content {
+    margin: 30px 0;
+}
+
+h2 {
+    color: #ff0;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #ff0;
+}
+
+h3 {
+    color: #f0f;
+    text-align: center;
+    margin: 20px 0 15px;
+    text-shadow: 0 0 10px #f0f;
+}
+
+h4 {
+    color: #0ff;
+    margin-bottom: 10px;
+    text-shadow: 0 0 5px #0ff;
+}
+
+p {
+    margin: 10px 0;
+}
+
+/* Featured / Game Cards */
+.featured {
+    margin: 40px 0;
+    padding: 20px;
+    border: 2px solid #f0f;
+    background: rgba(255, 0, 255, 0.05);
+}
+
+.game-card {
+    padding: 15px;
+    border: 1px dashed #0f0;
+    margin: 15px 0;
+    background: rgba(0, 255, 0, 0.02);
+}
+
+.game-card:hover {
+    background: rgba(0, 255, 0, 0.08);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px 5px;
+    color: #000;
+    background: #0f0;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    text-shadow: none;
+}
+
+.btn:hover {
+    background: #0ff;
+    box-shadow: 0 0 20px #0ff;
+}
+
+.btn-download {
+    background: #ff0;
+    color: #000;
+}
+
+.btn-download:hover {
+    background: #fff;
+    box-shadow: 0 0 20px #ff0;
+}
+
+/* Stats */
+.stats {
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    border: 1px solid #0f0;
+    color: #0f0;
+}
+
+/* Game List */
+.game-list {
+    list-style: none;
+}
+
+.game-list li {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #0f0;
+}
+
+.game-list li:hover {
+    background: rgba(0, 255, 0, 0.05);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 2px dashed #0f0;
+    color: #0a0;
+}
+
+/* Page specific */
+.page-title {
+    font-size: 24px;
+    color: #0ff;
+    text-align: center;
+    margin-bottom: 30px;
+    text-shadow: 0 0 15px #0ff;
+}
+
+.game-info {
+    margin: 30px 0;
+}
+
+.game-info dt {
+    color: #ff0;
+    margin-top: 15px;
+}
+
+.game-info dd {
+    margin-left: 20px;
+    color: #0f0;
+}
+
+.screenshot {
+    border: 2px solid #0f0;
+    margin: 20px 0;
+    padding: 5px;
+    background: #000;
+}
+
+.screenshot img {
+    max-width: 100%;
+    display: block;
+    image-rendering: pixelated;
+}
+
+/* Blink animation */
+.blink {
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Selection */
+::selection {
+    background: #0f0;
+    color: #000;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000;
+    border: 1px solid #0f0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #0f0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0ff;
+}
