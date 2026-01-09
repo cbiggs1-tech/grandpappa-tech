@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIGAPARSEC - GRANDPAPA.NET</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="scanlines"></div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div id="score">SCORE: <span id="score-value">0</span></div>
+            <div id="lives">SHIPS: <span id="lives-value">3</span></div>
+            <div id="level">LEVEL: <span id="level-value">1</span></div>
+        </div>
+        <div id="start-screen">
+            <h1>GIGAPARSEC</h1>
+            <p>RETRO SPACE SHOOTER</p>
+            <p class="blink">PRESS SPACE TO START</p>
+            <div class="controls">
+                <p>CONTROLS:</p>
+                <p>MOUSE - MOVE SHIP</p>
+                <p>RIGHT CLICK - FIRE</p>
+            </div>
+        </div>
+        <div id="game-over" class="hidden">
+            <h1>GAME OVER</h1>
+            <p>FINAL SCORE: <span id="final-score">0</span></p>
+            <p class="blink">PRESS SPACE TO RESTART</p>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
