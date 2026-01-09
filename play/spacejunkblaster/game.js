@@ -2178,6 +2178,10 @@ function updateGame() {
 
     // Gamepad controls
     let gp = pollGamepad();
+    // Debug every second
+    if (frameCount % 60 === 0 && gamepadConnected) {
+        console.log('Gamepad poll:', gp ? 'OK' : 'NULL', 'fire:', gp?.fire, 'buttonA:', gp?.buttonA);
+    }
     if (gp) {
         // Left stick for aiming/rotation
         if (abs(gp.leftX) > 0 || abs(gp.leftY) > 0) {
@@ -2232,6 +2236,11 @@ function updateGame() {
         // Fire button (A, RB, RT)
         if (gp.fire) {
             torchOn = true;
+        }
+
+        // Debug: show gamepad fire state (remove after testing)
+        if (frameCount % 60 === 0 && gp.buttonA) {
+            console.log('Gamepad A pressed, fire:', gp.fire);
         }
     }
 
