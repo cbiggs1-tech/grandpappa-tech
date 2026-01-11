@@ -455,9 +455,50 @@ p {
 footer {
     text-align: center;
     margin-top: 40px;
-    padding-top: 20px;
-    border-top: 2px dashed #0f0;
+    padding: 20px 0;
     color: #0a0;
+}
+
+.footer-divider {
+    color: #0f0;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    text-shadow: 0 0 5px #0f0;
+}
+
+.footer-links {
+    margin: 15px 0;
+}
+
+.footer-link {
+    color: #0ff;
+    text-decoration: none;
+    text-shadow: 0 0 5px #0ff;
+    transition: all 0.3s ease;
+    font-size: 10px;
+}
+
+.footer-link:hover {
+    color: #fff;
+    text-shadow: 0 0 15px #0ff;
+}
+
+.footer-sep {
+    color: #0a0;
+    margin: 0 10px;
+}
+
+.footer-tagline {
+    color: #f0f;
+    margin: 15px 0 5px;
+    text-shadow: 0 0 5px #f0f;
+}
+
+.footer-copyright {
+    color: #0a0;
+    font-size: 10px;
+    margin-top: 10px;
 }
 
 /* Page specific */
