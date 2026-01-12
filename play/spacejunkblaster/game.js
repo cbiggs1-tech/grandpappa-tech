@@ -2317,11 +2317,6 @@ function updateGame() {
         thrusting = true;
     }
 
-    // Touch fire button (plasma torch)
-    if (isMobile && touchInput.fire) {
-        torchOn = true;
-    }
-
     // Apply velocity and friction
     satellite.x += satellite.vx;
     satellite.y += satellite.vy;
@@ -2351,9 +2346,10 @@ function updateGame() {
         playThrusterSound();
     }
 
-    // Torch (spacebar or left mouse or gamepad fire)
+    // Torch (spacebar or left mouse or gamepad fire or touch fire)
     let gpFire = pollGamepad()?.fire || false;
-    torchOn = keyIsDown(32) || mouse.leftDown || gpFire;
+    let touchFire = isMobile && touchInput.fire;
+    torchOn = keyIsDown(32) || mouse.leftDown || gpFire || touchFire;
     if (torchOn && frameCount % 3 === 0) {
         playTorchSound();
     }

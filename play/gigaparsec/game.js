@@ -1235,6 +1235,9 @@ function setupFireButton() {
         touchInput.firing = true;
         fireButton.classList.add('active');
 
+        // Initialize audio on first touch (required for mobile browsers)
+        if (!audioCtx) initAudio();
+
         // Also handle game state changes on fire button tap
         if (gameState === GameState.MENU) {
             startGame();
