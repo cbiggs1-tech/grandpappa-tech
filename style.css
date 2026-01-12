@@ -282,6 +282,7 @@ h4 {
     color: #0ff;
     margin-bottom: 10px;
     text-shadow: 0 0 5px #0ff;
+    font-size: 14px;
 }
 
 p {
@@ -350,6 +351,10 @@ p {
         width: 100%;
         max-width: 200px;
         margin: 0 auto;
+    }
+
+    .game-info-text h4 {
+        font-size: 16px;
     }
 }
 
