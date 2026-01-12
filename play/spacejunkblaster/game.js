@@ -2296,6 +2296,32 @@ function updateGame() {
         // Fire button (A, RB, RT) - handled in torchOn line below
     }
 
+    // Touch controls (mobile)
+    if (isMobile && touchInput.active) {
+        // Use joystick to aim satellite
+        if (abs(touchInput.moveX) > 0.1 || abs(touchInput.moveY) > 0.1) {
+            let targetAngle = atan2(touchInput.moveY, touchInput.moveX);
+            let angleDiff = targetAngle - satellite.angle;
+            while (angleDiff > PI) angleDiff -= TWO_PI;
+            while (angleDiff < -PI) angleDiff += TWO_PI;
+            satellite.angle += angleDiff * 0.12;
+        }
+    }
+
+    // Touch thrust button
+    if (isMobile && touchInput.thrust) {
+        satellite.vx += cos(satellite.angle) * satellite.thrustPower * 1.2;
+        satellite.vy += sin(satellite.angle) * satellite.thrustPower * 1.2;
+        spawnThrusterParticle(satellite.angle + PI, 1.2);
+        spawnThrusterParticle(satellite.angle + PI + random(-0.2, 0.2), 1.0);
+        thrusting = true;
+    }
+
+    // Touch fire button (plasma torch)
+    if (isMobile && touchInput.fire) {
+        torchOn = true;
+    }
+
     // Apply velocity and friction
     satellite.x += satellite.vx;
     satellite.y += satellite.vy;
@@ -3088,3 +3114,190 @@ function keyPressed() {
         }
     }
 }
+
+// ==========================================
+// MOBILE TOUCH CONTROLS
+// ==========================================
+
+const touchInput = {
+    active: false,
+    moveX: 0,
+    moveY: 0,
+    thrust: false,
+    fire: false
+};
+
+let isMobile = false;
+let joystickTouchId = null;
+let thrustTouchId = null;
+let fireTouchId = null;
+
+function detectMobile() {
+    return ('ontouchstart' in window) ||
+           (navigator.maxTouchPoints > 0) ||
+           (navigator.msMaxTouchPoints > 0) ||
+           (window.matchMedia("(pointer: coarse)").matches);
+}
+
+function initTouchControls() {
+    isMobile = detectMobile();
+
+    if (isMobile) {
+        const touchControls = document.getElementById('touch-controls');
+        if (touchControls) touchControls.style.display = 'block';
+
+        setupJoystick();
+        setupThrustButton();
+        setupFireButton();
+    }
+}
+
+function setupJoystick() {
+    const joystickZone = document.getElementById('joystick-zone');
+    const joystickBase = document.getElementById('joystick-base');
+    const joystickStick = document.getElementById('joystick-stick');
+
+    if (!joystickZone || !joystickBase || !joystickStick) return;
+
+    const maxDistance = 40;
+
+    function handleJoystickStart(e) {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        joystickTouchId = touch.identifier;
+        touchInput.active = true;
+        updateJoystickPosition(touch);
+    }
+
+    function handleJoystickMove(e) {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === joystickTouchId) {
+                updateJoystickPosition(touch);
+                break;
+            }
+        }
+    }
+
+    function handleJoystickEnd(e) {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === joystickTouchId) {
+                joystickTouchId = null;
+                touchInput.active = false;
+                touchInput.moveX = 0;
+                touchInput.moveY = 0;
+                joystickStick.style.transform = 'translate(-50%, -50%)';
+                break;
+            }
+        }
+    }
+
+    function updateJoystickPosition(touch) {
+        const rect = joystickBase.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        let deltaX = touch.clientX - centerX;
+        let deltaY = touch.clientY - centerY;
+
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        if (distance > maxDistance) {
+            deltaX = (deltaX / distance) * maxDistance;
+            deltaY = (deltaY / distance) * maxDistance;
+        }
+
+        joystickStick.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
+
+        touchInput.moveX = deltaX / maxDistance;
+        touchInput.moveY = deltaY / maxDistance;
+    }
+
+    joystickZone.addEventListener('touchstart', handleJoystickStart, { passive: false });
+    joystickZone.addEventListener('touchmove', handleJoystickMove, { passive: false });
+    joystickZone.addEventListener('touchend', handleJoystickEnd, { passive: false });
+    joystickZone.addEventListener('touchcancel', handleJoystickEnd, { passive: false });
+}
+
+function setupThrustButton() {
+    const thrustButton = document.getElementById('thrust-button');
+    if (!thrustButton) return;
+
+    function handleThrustStart(e) {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        thrustTouchId = touch.identifier;
+        touchInput.thrust = true;
+        thrustButton.classList.add('active');
+
+        // Start game from menu on thrust button tap
+        if (gameState === 'MENU') {
+            initAudio();
+            startGame();
+        }
+    }
+
+    function handleThrustEnd(e) {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === thrustTouchId) {
+                thrustTouchId = null;
+                touchInput.thrust = false;
+                thrustButton.classList.remove('active');
+                break;
+            }
+        }
+    }
+
+    thrustButton.addEventListener('touchstart', handleThrustStart, { passive: false });
+    thrustButton.addEventListener('touchend', handleThrustEnd, { passive: false });
+    thrustButton.addEventListener('touchcancel', handleThrustEnd, { passive: false });
+}
+
+function setupFireButton() {
+    const fireButton = document.getElementById('fire-button');
+    if (!fireButton) return;
+
+    function handleFireStart(e) {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        fireTouchId = touch.identifier;
+        touchInput.fire = true;
+        fireButton.classList.add('active');
+
+        // Handle game state changes
+        if (gameState === 'MENU') {
+            initAudio();
+            startGame();
+        } else if (gameState === 'GAMEOVER') {
+            if (highScores.length < 10 || score > highScores[highScores.length - 1].score) {
+                gameState = 'ENTER_NAME';
+                nameChars = ['A', 'A', 'A'];
+                namePos = 0;
+            } else {
+                gameState = 'MENU';
+            }
+        }
+    }
+
+    function handleFireEnd(e) {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === fireTouchId) {
+                fireTouchId = null;
+                touchInput.fire = false;
+                fireButton.classList.remove('active');
+                break;
+            }
+        }
+    }
+
+    fireButton.addEventListener('touchstart', handleFireStart, { passive: false });
+    fireButton.addEventListener('touchend', handleFireEnd, { passive: false });
+    fireButton.addEventListener('touchcancel', handleFireEnd, { passive: false });
+}
+
+// Initialize touch controls when DOM is ready
+document.addEventListener('DOMContentLoaded', initTouchControls);

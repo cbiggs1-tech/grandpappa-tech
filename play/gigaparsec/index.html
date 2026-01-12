@@ -18,18 +18,33 @@
         <div id="start-screen">
             <h1>GIGAPARSEC</h1>
             <p>RETRO SPACE SHOOTER</p>
-            <p class="blink">PRESS SPACE TO START</p>
-            <div class="controls">
+            <p class="blink" id="start-prompt">PRESS SPACE TO START</p>
+            <div class="controls" id="desktop-controls">
                 <p>CONTROLS:</p>
                 <p>MOUSE - MOVE SHIP</p>
                 <p>RIGHT CLICK - FIRE</p>
                 <p>M - TOGGLE MUSIC</p>
             </div>
+            <div class="controls" id="mobile-controls-info" style="display: none;">
+                <p>CONTROLS:</p>
+                <p>LEFT JOYSTICK - MOVE</p>
+                <p>RIGHT BUTTON - FIRE</p>
+            </div>
         </div>
         <div id="game-over" class="hidden">
             <h1>GAME OVER</h1>
             <p>FINAL SCORE: <span id="final-score">0</span></p>
-            <p class="blink">PRESS SPACE TO RESTART</p>
+            <p class="blink" id="restart-prompt">PRESS SPACE TO RESTART</p>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div id="touch-controls" style="display: none;">
+            <div id="joystick-zone">
+                <div id="joystick-base">
+                    <div id="joystick-stick"></div>
+                </div>
+            </div>
+            <div id="fire-button">FIRE</div>
         </div>
     </div>
     <script src="game.js"></script>

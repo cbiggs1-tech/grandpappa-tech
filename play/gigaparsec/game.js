@@ -931,6 +931,18 @@ function updatePlayer() {
         if (gpInput.fire) {
             shoot();
         }
+    } else if (touchInput.active || touchInput.firing) {
+        // Mobile touch control mode - joystick-based movement
+        player.x += touchInput.moveX * player.speed;
+        player.y += touchInput.moveY * player.speed;
+
+        // Clamp to bounds (left half of screen)
+        player.x = Math.max(50, Math.min(player.x, canvas.width / 2));
+        player.y = Math.max(50, Math.min(player.y, canvas.height - 50));
+
+        if (touchInput.firing) {
+            shoot();
+        }
     } else {
         // Mouse control mode - smooth movement towards mouse position
         const targetX = Math.min(mouse.x, canvas.width / 2); // Limit to left half
@@ -1095,6 +1107,161 @@ function gameLoop() {
 
     requestAnimationFrame(gameLoop);
 }
+
+// ==========================================
+// MOBILE TOUCH CONTROLS
+// ==========================================
+
+const touchInput = {
+    active: false,
+    moveX: 0,
+    moveY: 0,
+    firing: false
+};
+
+let isMobile = false;
+let joystickTouchId = null;
+let fireTouchId = null;
+
+function detectMobile() {
+    return ('ontouchstart' in window) ||
+           (navigator.maxTouchPoints > 0) ||
+           (navigator.msMaxTouchPoints > 0) ||
+           (window.matchMedia("(pointer: coarse)").matches);
+}
+
+function initTouchControls() {
+    isMobile = detectMobile();
+
+    if (isMobile) {
+        // Show touch controls and mobile-specific UI
+        const touchControls = document.getElementById('touch-controls');
+        const mobileInfo = document.getElementById('mobile-controls-info');
+        const desktopInfo = document.getElementById('desktop-controls');
+        const startPrompt = document.getElementById('start-prompt');
+        const restartPrompt = document.getElementById('restart-prompt');
+
+        if (touchControls) touchControls.style.display = 'block';
+        if (mobileInfo) mobileInfo.style.display = 'block';
+        if (desktopInfo) desktopInfo.style.display = 'none';
+        if (startPrompt) startPrompt.textContent = 'TAP TO START';
+        if (restartPrompt) restartPrompt.textContent = 'TAP TO RESTART';
+
+        setupJoystick();
+        setupFireButton();
+    }
+}
+
+function setupJoystick() {
+    const joystickZone = document.getElementById('joystick-zone');
+    const joystickBase = document.getElementById('joystick-base');
+    const joystickStick = document.getElementById('joystick-stick');
+
+    if (!joystickZone || !joystickBase || !joystickStick) return;
+
+    const baseRadius = 60; // Half of joystick-base width
+    const maxDistance = 40; // Max stick travel
+
+    function handleJoystickStart(e) {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        joystickTouchId = touch.identifier;
+        touchInput.active = true;
+        updateJoystickPosition(touch);
+    }
+
+    function handleJoystickMove(e) {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === joystickTouchId) {
+                updateJoystickPosition(touch);
+                break;
+            }
+        }
+    }
+
+    function handleJoystickEnd(e) {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === joystickTouchId) {
+                joystickTouchId = null;
+                touchInput.active = false;
+                touchInput.moveX = 0;
+                touchInput.moveY = 0;
+                joystickStick.style.transform = 'translate(-50%, -50%)';
+                break;
+            }
+        }
+    }
+
+    function updateJoystickPosition(touch) {
+        const rect = joystickBase.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        let deltaX = touch.clientX - centerX;
+        let deltaY = touch.clientY - centerY;
+
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        if (distance > maxDistance) {
+            deltaX = (deltaX / distance) * maxDistance;
+            deltaY = (deltaY / distance) * maxDistance;
+        }
+
+        // Update stick visual position
+        joystickStick.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
+
+        // Normalize to -1 to 1 range
+        touchInput.moveX = deltaX / maxDistance;
+        touchInput.moveY = deltaY / maxDistance;
+    }
+
+    joystickZone.addEventListener('touchstart', handleJoystickStart, { passive: false });
+    joystickZone.addEventListener('touchmove', handleJoystickMove, { passive: false });
+    joystickZone.addEventListener('touchend', handleJoystickEnd, { passive: false });
+    joystickZone.addEventListener('touchcancel', handleJoystickEnd, { passive: false });
+}
+
+function setupFireButton() {
+    const fireButton = document.getElementById('fire-button');
+    if (!fireButton) return;
+
+    function handleFireStart(e) {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        fireTouchId = touch.identifier;
+        touchInput.firing = true;
+        fireButton.classList.add('active');
+
+        // Also handle game state changes on fire button tap
+        if (gameState === GameState.MENU) {
+            startGame();
+        } else if (gameState === GameState.GAME_OVER) {
+            resetGame();
+        }
+    }
+
+    function handleFireEnd(e) {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === fireTouchId) {
+                fireTouchId = null;
+                touchInput.firing = false;
+                fireButton.classList.remove('active');
+                break;
+            }
+        }
+    }
+
+    fireButton.addEventListener('touchstart', handleFireStart, { passive: false });
+    fireButton.addEventListener('touchend', handleFireEnd, { passive: false });
+    fireButton.addEventListener('touchcancel', handleFireEnd, { passive: false });
+}
+
+// Initialize touch controls when DOM is ready
+document.addEventListener('DOMContentLoaded', initTouchControls);
 
 // Initialize and start
 initStars();
