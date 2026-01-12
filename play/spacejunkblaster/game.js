@@ -2914,7 +2914,6 @@ function drawGame() {
     vertex(12, 6);
     vertex(10, 8);
     vertex(-12, 8);
-    closePath();
     endShape(CLOSE);
 
     // Phased array antenna (flat panel on top side of body)
