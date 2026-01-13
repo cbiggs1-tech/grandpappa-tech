@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>Begat - The Lineage Game</title>
+    <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Begat%22%2C%22short_name%22%3A%22Begat%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231a1a2e%22%2C%22theme_color%22%3A%22%231a1a2e%22%2C%22icons%22%3A%5B%5D%7D">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        :root {
+            --parchment: #f4e4bc;
+            --parchment-dark: #d4c4a0;
+            --ink: #2c1810;
+            --gold: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.6);
+            --night-sky: #1a1a2e;
+            --night-deep: #0f0f1a;
+            --star-white: #fffef0;
+            --success: #4a7c59;
+            --error: #8b4049;
+            --slot-empty: rgba(244, 228, 188, 0.2);
+            --slot-ready: rgba(212, 175, 55, 0.4);
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: var(--night-deep);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, var(--night-sky) 0%, var(--night-deep) 100%);
+            position: relative;
+        }
+
+        /* Starry background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: var(--star-white);
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Header */
+        .header {
+            padding: 1rem;
+            text-align: center;
+            z-index: 10;
+            background: linear-gradient(180deg, rgba(26, 26, 46, 0.95) 0%, transparent 100%);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--gold-glow);
+            letter-spacing: 0.2em;
+            margin-bottom: 0.25rem;
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            color: var(--parchment);
+            opacity: 0.8;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+            color: var(--gold);
+        }
+
+        /* Main game area */
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Timeline slots - top 70% */
+        .timeline-area {
+            flex: 0 0 65%;
+            padding: 1rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            display: flex;
+            align-items: center;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .timeline {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            min-width: max-content;
+            align-items: center;
+        }
+
+        .timeline-slot {
+            width: 5rem;
+            height: 7rem;
+            min-width: 5rem;
+            border: 3px dashed var(--parchment-dark);
+            border-radius: 12px;
+            background: var(--slot-empty);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .timeline-slot.fixed {
+            background: var(--parchment);
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        .timeline-slot.ready {
+            background: var(--slot-ready);
+            border-color: var(--gold);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .timeline-slot.filled {
+            background: var(--parchment);
+            border: 3px solid var(--success);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px var(--gold-glow); }
+            50% { box-shadow: 0 0 25px var(--gold-glow); }
+        }
+
+        .slot-name {
+            font-size: 0.85rem;
+            color: var(--ink);
+            text-align: center;
+            font-weight: bold;
+            padding: 0.25rem;
+        }
+
+        .slot-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .connector {
+            width: 1.5rem;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--parchment-dark));
+            flex-shrink: 0;
+        }
+
+        /* Card pool - bottom 35% */
+        .card-pool-area {
+            flex: 0 0 35%;
+            background: linear-gradient(0deg, rgba(15, 15, 26, 0.95) 0%, rgba(26, 26, 46, 0.8) 100%);
+            border-top: 2px solid var(--gold);
+            padding: 0.75rem;
+            overflow-y: auto;
+        }
+
+        .card-pool-label {
+            color: var(--parchment);
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .card-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            padding-bottom: 1rem;
+        }
+
+        .card {
+            width: 4.5rem;
+            height: 6rem;
+            min-width: 4.5rem;
+            background: linear-gradient(135deg, var(--parchment) 0%, var(--parchment-dark) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            user-select: none;
+        }
+
+        .card.locked {
+            background: linear-gradient(135deg, #3a3a5a 0%, #2a2a4a 100%);
+        }
+
+        .card.locked .card-icon {
+            opacity: 0.5;
+        }
+
+        .card.unlocked {
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        .card.dragging {
+            transform: scale(1.1);
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-icon {
+            width: 2rem;
+            height: 2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-name {
+            font-size: 0.7rem;
+            color: var(--ink);
+            text-align: center;
+            font-weight: bold;
+            padding: 0 0.25rem;
+        }
+
+        .card.locked .card-name {
+            color: var(--parchment);
+            opacity: 0.6;
+        }
+
+        .card-question-mark {
+            font-size: 1.5rem;
+            color: var(--gold);
+            opacity: 0.8;
+        }
+
+        /* Quiz Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .quiz-modal {
+            background: var(--parchment);
+            border-radius: 20px;
+            padding: 1.5rem;
+            max-width: 95%;
+            width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 4px solid var(--gold);
+            box-shadow: 0 0 50px var(--gold-glow);
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .quiz-header h2 {
+            color: var(--ink);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quiz-description {
+            font-size: 1.25rem;
+            color: var(--ink);
+            line-height: 1.6;
+            padding: 1rem;
+            background: rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .quiz-question {
+            font-size: 1.1rem;
+            color: var(--ink);
+            text-align: center;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .quiz-option {
+            padding: 1rem 1.5rem;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, #f8f0e0 0%, var(--parchment) 100%);
+            border: 3px solid var(--parchment-dark);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            color: var(--ink);
+            min-height: 3.5rem;
+        }
+
+        .quiz-option:active {
+            transform: scale(0.98);
+        }
+
+        .quiz-option.correct {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .quiz-option.wrong {
+            background: var(--error);
+            color: white;
+            border-color: var(--error);
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .quiz-feedback {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .quiz-feedback.success {
+            color: var(--success);
+        }
+
+        .quiz-feedback.error {
+            color: var(--error);
+        }
+
+        /* Menu & Settings */
+        .menu-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 3rem;
+            height: 3rem;
+            background: var(--parchment);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 1.5rem;
+            color: var(--ink);
+        }
+
+        .home-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 3rem;
+            height: 3rem;
+            background: var(--parchment);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 1.2rem;
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        .menu-modal {
+            background: var(--parchment);
+            border-radius: 20px;
+            padding: 1.5rem;
+            max-width: 95%;
+            width: 350px;
+            border: 4px solid var(--gold);
+        }
+
+        .menu-title {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--ink);
+            margin-bottom: 1rem;
+        }
+
+        .menu-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .menu-option {
+            padding: 1rem;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #f8f0e0 0%, var(--parchment) 100%);
+            border: 2px solid var(--parchment-dark);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            color: var(--ink);
+        }
+
+        .menu-option:active {
+            transform: scale(0.98);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: var(--error);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Win Screen */
+        .win-modal {
+            background: linear-gradient(135deg, var(--parchment) 0%, #fff8e7 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 4px solid var(--gold);
+            box-shadow: 0 0 100px var(--gold-glow);
+            animation: win-appear 0.5s ease;
+        }
+
+        @keyframes win-appear {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .win-title {
+            font-size: 2rem;
+            color: var(--gold);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1rem;
+        }
+
+        .win-subtitle {
+            font-size: 1.25rem;
+            color: var(--ink);
+            margin-bottom: 1rem;
+        }
+
+        .win-score {
+            font-size: 1.5rem;
+            color: var(--success);
+            margin-bottom: 1.5rem;
+        }
+
+        .win-btn {
+            padding: 1rem 2rem;
+            font-size: 1.25rem;
+            background: var(--gold);
+            color: var(--ink);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Accessibility speaker button */
+        .speak-btn {
+            background: var(--gold);
+            border: none;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Hint display */
+        .hint-display {
+            position: fixed;
+            bottom: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--parchment);
+            color: var(--ink);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            z-index: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            border: 2px solid var(--gold);
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .hint-display.visible {
+            opacity: 1;
+        }
+
+        /* Level indicator */
+        .level-indicator {
+            text-align: center;
+            color: var(--parchment);
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            margin: 0 auto 0.5rem;
+            max-width: 200px;
+        }
+
+        /* Install prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--parchment);
+            padding: 1rem;
+            text-align: center;
+            z-index: 1000;
+            border-top: 2px solid var(--gold);
+            display: none;
+        }
+
+        .install-prompt.visible {
+            display: block;
+        }
+
+        .install-btn {
+            background: var(--gold);
+            color: var(--ink);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+
+        .dismiss-btn {
+            background: transparent;
+            border: 2px solid var(--ink);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        /* Loading screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--night-deep);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-title {
+            font-size: 3rem;
+            color: var(--gold);
+            text-shadow: 0 0 30px var(--gold-glow);
+            margin-bottom: 1rem;
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: 0 0 20px var(--gold-glow); }
+            50% { text-shadow: 0 0 40px var(--gold-glow), 0 0 60px var(--gold-glow); }
+        }
+
+        .loading-text {
+            color: var(--parchment);
+            font-size: 1.2rem;
+        }
+
+        /* High contrast mode */
+        body.high-contrast {
+            --parchment: #ffffff;
+            --parchment-dark: #cccccc;
+            --ink: #000000;
+            --gold: #ffcc00;
+        }
+
+        /* Color blind mode */
+        body.colorblind {
+            --success: #0066cc;
+            --error: #cc6600;
+        }
+
+        @media (min-width: 768px) {
+            .card {
+                width: 5.5rem;
+                height: 7rem;
+            }
+            .timeline-slot {
+                width: 6rem;
+                height: 8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <h1 class="loading-title">BEGAT</h1>
+        <p class="loading-text">Preparing the Lineage...</p>
+    </div>
+
+    <div class="stars" id="stars"></div>
+
+    <a href="../../games.html" class="home-btn" title="Back to Games">ESC</a>
+
+    <header class="header">
+        <h1>BEGAT</h1>
+        <p class="subtitle">The Lineage of Jesus</p>
+        <div class="score-display">
+            <span id="scoreDisplay">Score: 0</span>
+            <span id="starsDisplay">Stars: 0</span>
+        </div>
+    </header>
+
+    <div class="level-indicator" id="levelIndicator">Level 1: Patriarchs</div>
+
+    <main class="game-container">
+        <div class="timeline-area" id="timelineArea">
+            <div class="timeline" id="timeline"></div>
+        </div>
+        <div class="card-pool-area">
+            <p class="card-pool-label">Tap a card to unlock, then drag to timeline</p>
+            <div class="card-pool" id="cardPool"></div>
+        </div>
+    </main>
+
+    <button class="menu-btn" id="menuBtn">&#9776;</button>
+
+    <div class="hint-display" id="hintDisplay"></div>
+
+    <div class="modal-overlay" id="quizModal">
+        <div class="quiz-modal">
+            <div class="quiz-header">
+                <h2>Unlock This Ancestor</h2>
+            </div>
+            <div class="quiz-description" id="quizDescription"></div>
+            <p class="quiz-question">Who is this person?</p>
+            <div class="quiz-options" id="quizOptions"></div>
+            <p class="quiz-feedback" id="quizFeedback"></p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="menuModal">
+        <div class="menu-modal">
+            <h2 class="menu-title">Menu</h2>
+            <div class="menu-options">
+                <button class="menu-option" id="newGameBtn">New Game</button>
+                <button class="menu-option" id="levelSelectBtn">Select Level</button>
+                <button class="menu-option" id="toggleSoundBtn">Sound: ON</button>
+                <button class="menu-option" id="toggleSpeechBtn">Speech: OFF</button>
+                <button class="menu-option" id="highContrastBtn">High Contrast</button>
+                <button class="menu-option" id="colorblindBtn">Colorblind Mode</button>
+                <button class="menu-option" id="closeMenuBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="levelModal">
+        <div class="menu-modal">
+            <h2 class="menu-title">Select Level</h2>
+            <div class="menu-options" id="levelOptions"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="winModal">
+        <div class="win-modal">
+            <h2 class="win-title">Behold the Lineage!</h2>
+            <p class="win-subtitle">You've connected the generations from Abraham to Jesus!</p>
+            <p class="win-score" id="finalScore">Final Score: 0</p>
+            <button class="win-btn" id="playAgainBtn">Play Again</button>
+        </div>
+    </div>
+
+    <div class="install-prompt" id="installPrompt">
+        <p>Install Begat for offline play!</p>
+        <button class="install-btn" id="installBtn">Install</button>
+        <button class="dismiss-btn" id="dismissInstall">Not Now</button>
+    </div>
+
+    <script>
+        // Game Data - Modular structure for easy expansion
+        const genealogy = [
+            { name: "Abraham", desc: ["Father of many nations, covenant with God (Gen 17:5)", "Tested with sacrifice of Isaac (Gen 22)", "Called from Ur, promised descendants as stars (Gen 12:1-3, 15:5)"], icon: "tent" },
+            { name: "Isaac", desc: ["Miracle son of Abraham and Sarah in old age (Gen 21:1-3)", "Father of Jacob and Esau, blessed deceiver (Gen 25:19-26, 27:1-40)", "Wells digger, covenant renewed (Gen 26:1-5, 23-25)"], icon: "altar" },
+            { name: "Jacob", desc: ["Renamed Israel after wrestling God (Gen 32:24-28)", "Father of 12 tribes, fled from Esau (Gen 27:41-45, 35:22-26)", "Dreamed of ladder to heaven (Gen 28:10-22)"], icon: "ladder" },
+            { name: "Judah", desc: ["Son of Jacob, tribe of Messiah and kings (Gen 49:8-10)", "Father of Perez via Tamar (Gen 38:1-30)", "Offered himself for Benjamin (Gen 44:18-34)"], icon: "scepter" },
+            { name: "Perez", desc: ["Twin son of Judah and Tamar, scarlet thread (Gen 38:27-30)", "Ancestor in Ruth's line to David (Ruth 4:18-22)", "Listed in Judahite clans (1 Chron 2:3-5)"], icon: "hand" },
+            { name: "Hezron", desc: ["Son of Perez, father of Ram (Ruth 4:18-19)", "Early Judahite in genealogy (1 Chron 2:5-9)", "Part of post-exile records (1 Chron 4:1)"], icon: "scroll" },
+            { name: "Ram", desc: ["Son of Hezron, also called Aram (Ruth 4:19)", "Father of Amminadab (1 Chron 2:9-10)", "In line from Judah to David (Matt 1:3-4)"], icon: "ram" },
+            { name: "Amminadab", desc: ["Son of Ram, father of Nahshon (Ruth 4:19-20)", "Grandfather of Elisheba, Aaron's wife (Ex 6:23)", "Judahite leader (1 Chron 2:10)"], icon: "banner" },
+            { name: "Nahshon", desc: ["Son of Amminadab, prince of Judah tribe (Num 1:7)", "Leader during wilderness wanderings (Num 2:3, 7:12)", "Offered first at tabernacle (Num 7:12-17)"], icon: "staff" },
+            { name: "Salmon", desc: ["Son of Nahshon, father of Boaz (Ruth 4:20-21)", "Married Rahab the Canaanite (Matt 1:5, Josh 6:25 implied)", "Post-exodus settler (1 Chron 2:10-11)"], icon: "fish" },
+            { name: "Boaz", desc: ["Son of Salmon, kinsman-redeemer of Ruth (Ruth 2:1-4:22)", "Wealthy Bethlehemite, married Moabite (Ruth 3:1-18)", "Ancestor of David (Ruth 4:17-22)"], icon: "sheaf" },
+            { name: "Obed", desc: ["Son of Boaz and Ruth, born in Bethlehem (Ruth 4:13-17)", "Father of Jesse (Ruth 4:17-22)", "Grandson raised by Naomi (Ruth 4:16)"], icon: "servant" },
+            { name: "Jesse", desc: ["Son of Obed, father of David (Ruth 4:22, 1 Sam 16:1)", "Bethlehemite with eight sons (1 Sam 17:12)", "Lineage in prophecies (Isa 11:1)"], icon: "tree" },
+            { name: "David", desc: ["Son of Jesse, anointed king by Samuel (1 Sam 16:1-13)", "Slew Goliath, man after God's heart (1 Sam 17:1-58, Acts 13:22)", "Psalmist and united Israel (2 Sam 5:1-5, Ps many)"], icon: "crown" },
+            { name: "Solomon", desc: ["Son of David and Bathsheba, built temple (2 Sam 12:24, 1 Kings 6:1-38)", "Wisest king, asked for wisdom (1 Kings 3:5-15)", "Wrote Proverbs, Ecclesiastes (Prov 1:1, Eccl 1:1)"], icon: "temple" },
+            { name: "Rehoboam", desc: ["Son of Solomon, first king of Judah (1 Kings 11:43)", "Rejected elders' advice, split kingdom (1 Kings 12:1-19)", "Fortified cities (2 Chron 11:5-12)"], icon: "split" },
+            { name: "Abijah", desc: ["Son of Rehoboam, warred with Israel (1 Kings 15:1-8)", "Relied on God in battle (2 Chron 13:1-22)", "Had 14 wives (2 Chron 13:21)"], icon: "sword" },
+            { name: "Asa", desc: ["Son of Abijah, reformed Judah (1 Kings 15:9-24)", "Removed idols, sought God (2 Chron 14:2-5)", "Defeated Ethiopians (2 Chron 14:9-15)"], icon: "reform" },
+            { name: "Jehoshaphat", desc: ["Son of Asa, strengthened Judah (1 Kings 22:41-50)", "Allied with Ahab, but sought prophets (2 Chron 18:1-34)", "Appointed judges (2 Chron 19:4-11)"], icon: "judge" },
+            { name: "Joram", desc: ["Son of Jehoshaphat, married Athaliah (2 Kings 8:16-24)", "Killed brothers, wicked reign (2 Chron 21:1-20)", "Struck with disease (2 Chron 21:18-19)"], icon: "plague" },
+            { name: "Uzziah", desc: ["Son of Joram (via Ahaziah/Joash/Amaziah), long reign (2 Kings 15:1-7)", "Prospered until pride, struck with leprosy (2 Chron 26:1-23)", "Built towers, army (2 Chron 26:9-15)"], icon: "tower" },
+            { name: "Jotham", desc: ["Son of Uzziah, ruled wisely (2 Kings 15:32-38)", "Built upper gate of temple (2 Chron 27:1-9)", "Conquered Ammonites (2 Chron 27:5)"], icon: "gate" },
+            { name: "Ahaz", desc: ["Son of Jotham, wicked, sacrificed son (2 Kings 16:1-20)", "Altar from Damascus (2 Chron 28:1-27)", "Besieged by Syria and Israel (Isa 7:1-9)"], icon: "altar" },
+            { name: "Hezekiah", desc: ["Son of Ahaz, reformed temple (2 Kings 18:1-8)", "Tunnel for water, prayed for life (2 Kings 20:1-11, 2 Chron 32:24-31)", "Defied Sennacherib (Isa 36-37)"], icon: "tunnel" },
+            { name: "Manasseh", desc: ["Son of Hezekiah, longest reign, wicked then repented (2 Kings 21:1-18)", "Built altars to stars, shed blood (2 Chron 33:1-20)", "Captive in Babylon, humbled (2 Chron 33:11-13)"], icon: "chains" },
+            { name: "Amon", desc: ["Son of Manasseh, wicked, assassinated (2 Kings 21:19-26)", "Followed father's early sins (2 Chron 33:21-25)", "Short two-year reign"], icon: "dagger" },
+            { name: "Josiah", desc: ["Son of Amon, great reformer (2 Kings 22:1-23:30)", "Found law book, Passover revival (2 Chron 34:1-35:27)", "Killed at Megiddo (2 Kings 23:29-30)"], icon: "book" },
+            { name: "Jeconiah", desc: ["Son of Josiah (via Jehoiakim), exiled to Babylon (2 Kings 24:6-16)", "Also called Coniah/Jehoiachin (Jer 22:24-30)", "Released by Evil-Merodach (2 Kings 25:27-30)"], icon: "exile" },
+            { name: "Shealtiel", desc: ["Son of Jeconiah, post-exile (1 Chron 3:17-19)", "Father of Zerubbabel (Ezra 3:2)", "In messianic line (Hag 2:23 implied)"], icon: "chain" },
+            { name: "Zerubbabel", desc: ["Son of Shealtiel, governor of Judah (Ezra 2:2, Hag 1:1)", "Led temple rebuild (Ezra 3:8-13, Zech 4:6-10)", "Signet ring of God (Hag 2:23)"], icon: "temple" },
+            { name: "Abiud", desc: ["Son of Zerubbabel (Matt 1:13, possibly via 1 Chron 3:19-24 branches)", "Post-exile ancestor"], icon: "branch" },
+            { name: "Eliakim", desc: ["Son of Abiud (Matt 1:13)", "In line to Joseph"], icon: "key" },
+            { name: "Azor", desc: ["Son of Eliakim (Matt 1:13)", "Hellenistic-era name in genealogy"], icon: "star" },
+            { name: "Zadok", desc: ["Son of Azor (Matt 1:14)", "Possibly priestly ties (like 1 Chron 6)"], icon: "priest" },
+            { name: "Achim", desc: ["Son of Zadok (Matt 1:14)", "Post-exile figure"], icon: "scroll" },
+            { name: "Eliud", desc: ["Son of Achim (Matt 1:14)", "Ancestor in Matthew's list"], icon: "light" },
+            { name: "Eleazar", desc: ["Son of Eliud (Matt 1:15)", "Common priestly name (Ex 6:23)"], icon: "altar" },
+            { name: "Matthan", desc: ["Son of Eleazar (Matt 1:15)", "Grandfather of Joseph"], icon: "father" },
+            { name: "Jacob", desc: ["Son of Matthan, father of Joseph (Matt 1:15-16)", "Not the patriarch, later Jacob"], icon: "staff" },
+            { name: "Joseph", desc: ["Son of Jacob, husband of Mary (Matt 1:16)", "Righteous man, dreams from angel (Matt 1:18-25, 2:13-23)", "Carpenter in Nazareth (Matt 13:55)"], icon: "carpenter" },
+            { name: "Jesus", desc: ["Son of Joseph (legally), the Christ (Matt 1:16-17)", "Born in Bethlehem, fulfilled prophecies (Mic 5:2, Isa 7:14)", "Savior, Emmanuel (Matt 1:21-23)"], icon: "lamb" }
+        ];
+
+        // Level configurations
+        const levels = [
+            { name: "Patriarchs", start: 0, end: 13, difficulty: "Easy" },
+            { name: "Kings of Judah", start: 14, end: 27, difficulty: "Medium" },
+            { name: "Post-Exile", start: 28, end: 41, difficulty: "Medium" },
+            { name: "Full Lineage", start: 0, end: 41, difficulty: "Hard" }
+        ];
+
+        // Game State
+        let gameState = {
+            currentLevel: 0,
+            score: 0,
+            stars: 0,
+            unlockedCards: new Set(),
+            placedCards: new Map(),
+            soundEnabled: true,
+            speechEnabled: false,
+            highContrast: false,
+            colorblind: false,
+            currentQuizCard: null,
+            draggedCard: null
+        };
+
+        // Audio Context for Web Audio API
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
+
+        function playTone(frequency, duration, type = 'sine') {
+            if (!gameState.soundEnabled) return;
+            try {
+                const ctx = initAudio();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + duration);
+            } catch (e) {
+                console.log('Audio error:', e);
+            }
+        }
+
+        function playChime() {
+            playTone(523.25, 0.15); // C5
+            setTimeout(() => playTone(659.25, 0.15), 100); // E5
+            setTimeout(() => playTone(783.99, 0.2), 200); // G5
+        }
+
+        function playError() {
+            playTone(200, 0.3, 'square');
+        }
+
+        function playSuccess() {
+            playTone(392, 0.1); // G4
+            setTimeout(() => playTone(523.25, 0.1), 100); // C5
+            setTimeout(() => playTone(659.25, 0.15), 200); // E5
+        }
+
+        function playWin() {
+            const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5];
+            notes.forEach((freq, i) => {
+                setTimeout(() => playTone(freq, 0.2), i * 150);
+            });
+        }
+
+        // Speech synthesis
+        function speak(text) {
+            if (!gameState.speechEnabled) return;
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Vibration
+        function vibrate(pattern) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        // Generate SVG icons
+        function generateIcon(iconType, color = '#2c1810') {
+            const icons = {
+                tent: `<svg viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="none" stroke="${color}" stroke-width="4"/><line x1="50" y1="10" x2="50" y2="85" stroke="${color}" stroke-width="3"/></svg>`,
+                altar: `<svg viewBox="0 0 100 100"><rect x="20" y="50" width="60" height="35" fill="none" stroke="${color}" stroke-width="4"/><polygon points="30,50 50,25 70,50" fill="none" stroke="${color}" stroke-width="3"/><path d="M40,35 Q50,20 60,35" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                ladder: `<svg viewBox="0 0 100 100"><line x1="30" y1="90" x2="40" y2="10" stroke="${color}" stroke-width="4"/><line x1="70" y1="90" x2="60" y2="10" stroke="${color}" stroke-width="4"/><line x1="32" y1="75" x2="68" y2="75" stroke="${color}" stroke-width="3"/><line x1="35" y1="55" x2="65" y2="55" stroke="${color}" stroke-width="3"/><line x1="38" y1="35" x2="62" y2="35" stroke="${color}" stroke-width="3"/></svg>`,
+                scepter: `<svg viewBox="0 0 100 100"><line x1="50" y1="90" x2="50" y2="25" stroke="${color}" stroke-width="5"/><circle cx="50" cy="18" r="12" fill="none" stroke="${color}" stroke-width="3"/><circle cx="50" cy="18" r="5" fill="${color}"/></svg>`,
+                hand: `<svg viewBox="0 0 100 100"><path d="M35,80 L35,45 M45,80 L45,35 M55,80 L55,35 M65,80 L65,45 M75,55 L75,50 Q75,40 65,40" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round"/><path d="M30,80 Q50,90 75,70" fill="none" stroke="${color}" stroke-width="3"/></svg>`,
+                scroll: `<svg viewBox="0 0 100 100"><rect x="25" y="20" width="50" height="60" rx="3" fill="none" stroke="${color}" stroke-width="3"/><ellipse cx="25" cy="20" rx="8" ry="5" fill="none" stroke="${color}" stroke-width="2"/><ellipse cx="75" cy="80" rx="8" ry="5" fill="none" stroke="${color}" stroke-width="2"/><line x1="35" y1="35" x2="65" y2="35" stroke="${color}" stroke-width="2"/><line x1="35" y1="50" x2="65" y2="50" stroke="${color}" stroke-width="2"/><line x1="35" y1="65" x2="55" y2="65" stroke="${color}" stroke-width="2"/></svg>`,
+                ram: `<svg viewBox="0 0 100 100"><ellipse cx="55" cy="55" rx="25" ry="20" fill="none" stroke="${color}" stroke-width="3"/><circle cx="35" cy="45" r="15" fill="none" stroke="${color}" stroke-width="3"/><path d="M25,35 Q15,25 20,40" fill="none" stroke="${color}" stroke-width="3"/><path d="M45,35 Q55,25 50,40" fill="none" stroke="${color}" stroke-width="3"/><circle cx="30" cy="42" r="2" fill="${color}"/><circle cx="40" cy="42" r="2" fill="${color}"/></svg>`,
+                banner: `<svg viewBox="0 0 100 100"><line x1="30" y1="90" x2="30" y2="15" stroke="${color}" stroke-width="4"/><path d="M30,15 L75,25 L75,55 L30,45 Z" fill="none" stroke="${color}" stroke-width="3"/><circle cx="30" cy="12" r="5" fill="${color}"/></svg>`,
+                staff: `<svg viewBox="0 0 100 100"><line x1="50" y1="90" x2="50" y2="15" stroke="${color}" stroke-width="5"/><path d="M45,15 Q50,5 55,15" fill="none" stroke="${color}" stroke-width="3"/></svg>`,
+                fish: `<svg viewBox="0 0 100 100"><ellipse cx="45" cy="50" rx="30" ry="18" fill="none" stroke="${color}" stroke-width="3"/><polygon points="75,50 95,35 95,65" fill="none" stroke="${color}" stroke-width="3"/><circle cx="28" cy="47" r="3" fill="${color}"/><path d="M45,45 Q55,50 45,55" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                sheaf: `<svg viewBox="0 0 100 100"><line x1="50" y1="90" x2="50" y2="40" stroke="${color}" stroke-width="3"/><line x1="35" y1="85" x2="40" y2="35" stroke="${color}" stroke-width="2"/><line x1="65" y1="85" x2="60" y2="35" stroke="${color}" stroke-width="2"/><ellipse cx="50" cy="30" rx="20" ry="15" fill="none" stroke="${color}" stroke-width="3"/><path d="M40,60 Q50,55 60,60" fill="none" stroke="${color}" stroke-width="3"/></svg>`,
+                servant: `<svg viewBox="0 0 100 100"><circle cx="50" cy="25" r="12" fill="none" stroke="${color}" stroke-width="3"/><line x1="50" y1="37" x2="50" y2="65" stroke="${color}" stroke-width="3"/><line x1="50" y1="45" x2="30" y2="55" stroke="${color}" stroke-width="3"/><line x1="50" y1="45" x2="70" y2="55" stroke="${color}" stroke-width="3"/><line x1="50" y1="65" x2="35" y2="90" stroke="${color}" stroke-width="3"/><line x1="50" y1="65" x2="65" y2="90" stroke="${color}" stroke-width="3"/></svg>`,
+                tree: `<svg viewBox="0 0 100 100"><line x1="50" y1="90" x2="50" y2="45" stroke="${color}" stroke-width="5"/><circle cx="50" cy="35" r="25" fill="none" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="30" y2="70" stroke="${color}" stroke-width="2"/><line x1="50" y1="55" x2="70" y2="70" stroke="${color}" stroke-width="2"/></svg>`,
+                crown: `<svg viewBox="0 0 100 100"><path d="M20,70 L20,40 L35,55 L50,30 L65,55 L80,40 L80,70 Z" fill="none" stroke="${color}" stroke-width="3"/><rect x="20" y="70" width="60" height="10" fill="none" stroke="${color}" stroke-width="3"/><circle cx="50" cy="30" r="5" fill="${color}"/><circle cx="20" cy="40" r="4" fill="${color}"/><circle cx="80" cy="40" r="4" fill="${color}"/></svg>`,
+                temple: `<svg viewBox="0 0 100 100"><polygon points="50,15 85,35 15,35" fill="none" stroke="${color}" stroke-width="3"/><rect x="20" y="35" width="60" height="50" fill="none" stroke="${color}" stroke-width="3"/><rect x="40" y="55" width="20" height="30" fill="none" stroke="${color}" stroke-width="2"/><line x1="30" y1="35" x2="30" y2="85" stroke="${color}" stroke-width="3"/><line x1="70" y1="35" x2="70" y2="85" stroke="${color}" stroke-width="3"/></svg>`,
+                split: `<svg viewBox="0 0 100 100"><line x1="50" y1="20" x2="50" y2="50" stroke="${color}" stroke-width="4"/><line x1="50" y1="50" x2="25" y2="80" stroke="${color}" stroke-width="4"/><line x1="50" y1="50" x2="75" y2="80" stroke="${color}" stroke-width="4"/><circle cx="50" cy="20" r="5" fill="${color}"/></svg>`,
+                sword: `<svg viewBox="0 0 100 100"><line x1="50" y1="15" x2="50" y2="70" stroke="${color}" stroke-width="4"/><line x1="35" y1="35" x2="65" y2="35" stroke="${color}" stroke-width="4"/><polygon points="50,15 45,25 55,25" fill="${color}"/><rect x="45" y="70" width="10" height="15" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                reform: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="none" stroke="${color}" stroke-width="3"/><path d="M50,25 L50,50 L70,50" fill="none" stroke="${color}" stroke-width="3"/><polygon points="25,50 15,45 15,55" fill="${color}"/></svg>`,
+                judge: `<svg viewBox="0 0 100 100"><rect x="35" y="15" width="30" height="25" fill="none" stroke="${color}" stroke-width="3"/><line x1="50" y1="40" x2="50" y2="55" stroke="${color}" stroke-width="3"/><ellipse cx="50" cy="70" rx="30" ry="15" fill="none" stroke="${color}" stroke-width="3"/></svg>`,
+                plague: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="25" fill="none" stroke="${color}" stroke-width="3"/><circle cx="40" cy="45" r="5" fill="${color}"/><circle cx="60" cy="45" r="5" fill="${color}"/><circle cx="50" cy="60" r="4" fill="${color}"/><circle cx="35" cy="55" r="3" fill="${color}"/><circle cx="65" cy="55" r="3" fill="${color}"/></svg>`,
+                tower: `<svg viewBox="0 0 100 100"><rect x="30" y="25" width="40" height="60" fill="none" stroke="${color}" stroke-width="3"/><polygon points="30,25 50,10 70,25" fill="none" stroke="${color}" stroke-width="3"/><rect x="40" y="60" width="20" height="25" fill="none" stroke="${color}" stroke-width="2"/><rect x="35" y="35" width="10" height="10" fill="none" stroke="${color}" stroke-width="2"/><rect x="55" y="35" width="10" height="10" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                gate: `<svg viewBox="0 0 100 100"><rect x="20" y="30" width="60" height="55" fill="none" stroke="${color}" stroke-width="3"/><path d="M35,85 L35,50 Q50,35 65,50 L65,85" fill="none" stroke="${color}" stroke-width="3"/><rect x="20" y="20" width="60" height="10" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                tunnel: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="35" ry="25" fill="none" stroke="${color}" stroke-width="3"/><ellipse cx="50" cy="50" rx="20" ry="15" fill="none" stroke="${color}" stroke-width="2"/><path d="M15,50 Q30,60 50,50 Q70,40 85,50" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                chains: `<svg viewBox="0 0 100 100"><ellipse cx="35" cy="30" rx="12" ry="8" fill="none" stroke="${color}" stroke-width="3"/><ellipse cx="50" cy="50" rx="12" ry="8" fill="none" stroke="${color}" stroke-width="3"/><ellipse cx="65" cy="70" rx="12" ry="8" fill="none" stroke="${color}" stroke-width="3"/></svg>`,
+                dagger: `<svg viewBox="0 0 100 100"><polygon points="50,15 45,55 55,55" fill="none" stroke="${color}" stroke-width="3"/><rect x="40" y="55" width="20" height="8" fill="none" stroke="${color}" stroke-width="2"/><rect x="45" y="63" width="10" height="15" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                book: `<svg viewBox="0 0 100 100"><rect x="25" y="20" width="50" height="60" rx="3" fill="none" stroke="${color}" stroke-width="3"/><line x1="50" y1="20" x2="50" y2="80" stroke="${color}" stroke-width="2"/><line x1="30" y1="30" x2="45" y2="30" stroke="${color}" stroke-width="1"/><line x1="30" y1="40" x2="45" y2="40" stroke="${color}" stroke-width="1"/><line x1="55" y1="30" x2="70" y2="30" stroke="${color}" stroke-width="1"/><line x1="55" y1="40" x2="70" y2="40" stroke="${color}" stroke-width="1"/></svg>`,
+                exile: `<svg viewBox="0 0 100 100"><circle cx="40" cy="35" r="12" fill="none" stroke="${color}" stroke-width="3"/><line x1="40" y1="47" x2="40" y2="70" stroke="${color}" stroke-width="3"/><line x1="40" y1="70" x2="30" y2="90" stroke="${color}" stroke-width="3"/><line x1="40" y1="70" x2="50" y2="90" stroke="${color}" stroke-width="3"/><path d="M60,30 L80,30 L80,70 L60,70" fill="none" stroke="${color}" stroke-width="3"/></svg>`,
+                chain: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="30" rx="15" ry="10" fill="none" stroke="${color}" stroke-width="3"/><ellipse cx="50" cy="50" rx="15" ry="10" fill="none" stroke="${color}" stroke-width="3"/><ellipse cx="50" cy="70" rx="15" ry="10" fill="none" stroke="${color}" stroke-width="3"/></svg>`,
+                branch: `<svg viewBox="0 0 100 100"><line x1="50" y1="85" x2="50" y2="50" stroke="${color}" stroke-width="4"/><line x1="50" y1="50" x2="30" y2="30" stroke="${color}" stroke-width="3"/><line x1="50" y1="50" x2="70" y2="30" stroke="${color}" stroke-width="3"/><circle cx="30" cy="25" r="8" fill="none" stroke="${color}" stroke-width="2"/><circle cx="70" cy="25" r="8" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                key: `<svg viewBox="0 0 100 100"><circle cx="35" cy="35" r="15" fill="none" stroke="${color}" stroke-width="3"/><line x1="47" y1="43" x2="80" y2="76" stroke="${color}" stroke-width="4"/><line x1="70" y1="66" x2="80" y2="56" stroke="${color}" stroke-width="3"/><line x1="60" y1="56" x2="70" y2="46" stroke="${color}" stroke-width="3"/></svg>`,
+                star: `<svg viewBox="0 0 100 100"><polygon points="50,15 58,40 85,40 63,55 73,85 50,67 27,85 37,55 15,40 42,40" fill="none" stroke="${color}" stroke-width="3"/></svg>`,
+                priest: `<svg viewBox="0 0 100 100"><circle cx="50" cy="25" r="12" fill="none" stroke="${color}" stroke-width="3"/><path d="M35,40 L35,85 L65,85 L65,40" fill="none" stroke="${color}" stroke-width="3"/><line x1="35" y1="50" x2="65" y2="50" stroke="${color}" stroke-width="2"/><rect x="45" y="55" width="10" height="15" fill="none" stroke="${color}" stroke-width="2"/></svg>`,
+                light: `<svg viewBox="0 0 100 100"><circle cx="50" cy="45" r="20" fill="none" stroke="${color}" stroke-width="3"/><line x1="50" y1="15" x2="50" y2="5" stroke="${color}" stroke-width="2"/><line x1="50" y1="75" x2="50" y2="85" stroke="${color}" stroke-width="2"/><line x1="20" y1="45" x2="10" y2="45" stroke="${color}" stroke-width="2"/><line x1="80" y1="45" x2="90" y2="45" stroke="${color}" stroke-width="2"/><line x1="28" y1="23" x2="20" y2="15" stroke="${color}" stroke-width="2"/><line x1="72" y1="23" x2="80" y2="15" stroke="${color}" stroke-width="2"/><line x1="28" y1="67" x2="20" y2="75" stroke="${color}" stroke-width="2"/><line x1="72" y1="67" x2="80" y2="75" stroke="${color}" stroke-width="2"/></svg>`,
+                father: `<svg viewBox="0 0 100 100"><circle cx="50" cy="25" r="15" fill="none" stroke="${color}" stroke-width="3"/><path d="M30,50 Q50,45 70,50 L65,85 L35,85 Z" fill="none" stroke="${color}" stroke-width="3"/><circle cx="45" cy="23" r="2" fill="${color}"/><circle cx="55" cy="23" r="2" fill="${color}"/></svg>`,
+                carpenter: `<svg viewBox="0 0 100 100"><rect x="20" y="40" width="60" height="10" fill="none" stroke="${color}" stroke-width="3"/><rect x="40" y="20" width="20" height="65" fill="none" stroke="${color}" stroke-width="3"/><line x1="30" y1="60" x2="30" y2="80" stroke="${color}" stroke-width="3"/><line x1="20" y1="75" x2="40" y2="75" stroke="${color}" stroke-width="3"/></svg>`,
+                lamb: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="55" rx="30" ry="20" fill="none" stroke="${color}" stroke-width="3"/><circle cx="30" cy="45" r="12" fill="none" stroke="${color}" stroke-width="3"/><ellipse cx="26" cy="38" rx="3" ry="6" fill="none" stroke="${color}" stroke-width="2"/><ellipse cx="34" cy="38" rx="3" ry="6" fill="none" stroke="${color}" stroke-width="2"/><circle cx="26" cy="45" r="2" fill="${color}"/><line x1="35" y1="75" x2="35" y2="85" stroke="${color}" stroke-width="3"/><line x1="65" y1="75" x2="65" y2="85" stroke="${color}" stroke-width="3"/></svg>`
+            };
+            return icons[iconType] || icons.scroll;
+        }
+
+        // Create stars background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const count = 100;
+
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = (Math.random() * 3 + 1) + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Get current level's genealogy subset
+        function getCurrentGenealogyRange() {
+            const level = levels[gameState.currentLevel];
+            return {
+                start: level.start,
+                end: level.end,
+                data: genealogy.slice(level.start, level.end + 1)
+            };
+        }
+
+        // Initialize game
+        function initGame() {
+            const range = getCurrentGenealogyRange();
+            gameState.unlockedCards = new Set();
+            gameState.placedCards = new Map();
+
+            // First and last are always unlocked
+            gameState.unlockedCards.add(range.start);
+            gameState.unlockedCards.add(range.end);
+            gameState.placedCards.set(range.start, 0);
+            gameState.placedCards.set(range.end, range.data.length - 1);
+
+            renderTimeline();
+            renderCardPool();
+            updateDisplay();
+        }
+
+        // Render timeline slots
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+            const range = getCurrentGenealogyRange();
+            timeline.innerHTML = '';
+
+            for (let i = 0; i < range.data.length; i++) {
+                if (i > 0) {
+                    const connector = document.createElement('div');
+                    connector.className = 'connector';
+                    timeline.appendChild(connector);
+                }
+
+                const slot = document.createElement('div');
+                slot.className = 'timeline-slot';
+                slot.dataset.position = i;
+
+                const actualIndex = range.start + i;
+                const isFixed = (i === 0 || i === range.data.length - 1);
+                const isPlaced = gameState.placedCards.has(actualIndex);
+
+                if (isFixed || isPlaced) {
+                    slot.classList.add('fixed');
+                    const person = genealogy[actualIndex];
+
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'slot-icon';
+                    iconDiv.innerHTML = generateIcon(person.icon);
+                    slot.appendChild(iconDiv);
+
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'slot-name';
+                    nameDiv.textContent = person.name;
+                    slot.appendChild(nameDiv);
+                } else {
+                    slot.classList.add('ready');
+                    slot.innerHTML = '<span style="font-size:2rem;color:var(--gold);opacity:0.5">?</span>';
+                }
+
+                // Drop zone events
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('drop', handleDrop);
+                slot.addEventListener('touchmove', handleTouchMove, { passive: false });
+                slot.addEventListener('touchend', handleTouchEnd);
+
+                timeline.appendChild(slot);
+            }
+        }
+
+        // Render card pool
+        function renderCardPool() {
+            const cardPool = document.getElementById('cardPool');
+            const range = getCurrentGenealogyRange();
+            cardPool.innerHTML = '';
+
+            // Get cards that haven't been placed (excluding fixed endpoints)
+            const availableIndices = [];
+            for (let i = range.start + 1; i < range.end; i++) {
+                if (!gameState.placedCards.has(i)) {
+                    availableIndices.push(i);
+                }
+            }
+
+            // Shuffle
+            for (let i = availableIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
+            }
+
+            availableIndices.forEach(idx => {
+                const person = genealogy[idx];
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = idx;
+
+                const isUnlocked = gameState.unlockedCards.has(idx);
+
+                if (isUnlocked) {
+                    card.classList.add('unlocked');
+                    card.draggable = true;
+
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'card-icon';
+                    iconDiv.innerHTML = generateIcon(person.icon);
+                    card.appendChild(iconDiv);
+
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'card-name';
+                    nameDiv.textContent = person.name;
+                    card.appendChild(nameDiv);
+
+                    // Drag events
+                    card.addEventListener('dragstart', handleDragStart);
+                    card.addEventListener('dragend', handleDragEnd);
+                    card.addEventListener('touchstart', handleTouchStart, { passive: false });
+                } else {
+                    card.classList.add('locked');
+
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'card-icon';
+                    iconDiv.innerHTML = generateIcon(person.icon, '#888');
+                    card.appendChild(iconDiv);
+
+                    const questionMark = document.createElement('div');
+                    questionMark.className = 'card-question-mark';
+                    questionMark.textContent = '?';
+                    card.appendChild(questionMark);
+
+                    card.addEventListener('click', () => openQuiz(idx));
+                    card.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        openQuiz(idx);
+                    });
+                }
+
+                cardPool.appendChild(card);
+            });
+        }
+
+        // Quiz system
+        function openQuiz(cardIndex) {
+            gameState.currentQuizCard = cardIndex;
+            const person = genealogy[cardIndex];
+
+            // Random description
+            const desc = person.desc[Math.floor(Math.random() * person.desc.length)];
+            document.getElementById('quizDescription').textContent = desc;
+            speak(desc);
+
+            // Generate options (correct + 3 random)
+            const range = getCurrentGenealogyRange();
+            const options = [cardIndex];
+            const available = [];
+
+            for (let i = range.start; i <= range.end; i++) {
+                if (i !== cardIndex) available.push(i);
+            }
+
+            while (options.length < 4 && available.length > 0) {
+                const randomIdx = Math.floor(Math.random() * available.length);
+                options.push(available[randomIdx]);
+                available.splice(randomIdx, 1);
+            }
+
+            // Shuffle options
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+
+            options.forEach(optIdx => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.textContent = genealogy[optIdx].name;
+                btn.dataset.index = optIdx;
+                btn.addEventListener('click', () => checkQuizAnswer(optIdx));
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quizFeedback').textContent = '';
+            document.getElementById('quizModal').classList.add('active');
+        }
+
+        function checkQuizAnswer(selectedIndex) {
+            const feedback = document.getElementById('quizFeedback');
+            const options = document.querySelectorAll('.quiz-option');
+
+            options.forEach(opt => {
+                opt.disabled = true;
+                if (parseInt(opt.dataset.index) === gameState.currentQuizCard) {
+                    opt.classList.add('correct');
+                } else if (parseInt(opt.dataset.index) === selectedIndex && selectedIndex !== gameState.currentQuizCard) {
+                    opt.classList.add('wrong');
+                }
+            });
+
+            if (selectedIndex === gameState.currentQuizCard) {
+                feedback.textContent = 'Correct!';
+                feedback.className = 'quiz-feedback success';
+                playChime();
+                vibrate(100);
+                speak('Correct!');
+
+                gameState.unlockedCards.add(gameState.currentQuizCard);
+                gameState.score += 200;
+                gameState.stars += 1;
+
+                setTimeout(() => {
+                    document.getElementById('quizModal').classList.remove('active');
+                    renderCardPool();
+                    updateDisplay();
+                }, 1000);
+            } else {
+                feedback.textContent = 'Try again!';
+                feedback.className = 'quiz-feedback error';
+                playError();
+                vibrate([50, 50, 50]);
+                speak('Try again');
+
+                setTimeout(() => {
+                    options.forEach(opt => {
+                        opt.disabled = false;
+                        opt.classList.remove('correct', 'wrong');
+                    });
+                    feedback.textContent = '';
+                }, 1500);
+            }
+        }
+
+        // Drag and drop handlers
+        function handleDragStart(e) {
+            gameState.draggedCard = parseInt(e.target.dataset.index);
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            gameState.draggedCard = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const slot = e.currentTarget;
+            const position = parseInt(slot.dataset.position);
+            attemptPlacement(position);
+        }
+
+        // Touch handlers for mobile
+        let touchCard = null;
+        let touchClone = null;
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const card = e.currentTarget;
+            gameState.draggedCard = parseInt(card.dataset.index);
+            touchCard = card;
+
+            // Create visual clone
+            touchClone = card.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '1000';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.opacity = '0.9';
+            touchClone.style.transform = 'scale(1.1)';
+            document.body.appendChild(touchClone);
+
+            const touch = e.touches[0];
+            touchClone.style.left = (touch.clientX - 40) + 'px';
+            touchClone.style.top = (touch.clientY - 50) + 'px';
+
+            card.classList.add('dragging');
+        }
+
+        function handleTouchMove(e) {
+            if (!touchClone) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            touchClone.style.left = (touch.clientX - 40) + 'px';
+            touchClone.style.top = (touch.clientY - 50) + 'px';
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchClone || !touchCard) return;
+
+            const touch = e.changedTouches[0];
+            touchClone.remove();
+            touchClone = null;
+            touchCard.classList.remove('dragging');
+
+            // Find slot under touch
+            const slots = document.querySelectorAll('.timeline-slot');
+            slots.forEach(slot => {
+                const rect = slot.getBoundingClientRect();
+                if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                    touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                    const position = parseInt(slot.dataset.position);
+                    attemptPlacement(position);
+                }
+            });
+
+            touchCard = null;
+            gameState.draggedCard = null;
+        }
+
+        // Attempt to place card
+        function attemptPlacement(position) {
+            if (gameState.draggedCard === null) return;
+
+            const range = getCurrentGenealogyRange();
+            const expectedIndex = range.start + position;
+
+            if (gameState.draggedCard === expectedIndex) {
+                // Correct placement
+                gameState.placedCards.set(gameState.draggedCard, position);
+                gameState.score += 100;
+                playSuccess();
+                vibrate(100);
+
+                renderTimeline();
+                renderCardPool();
+                updateDisplay();
+
+                checkWinCondition();
+            } else {
+                // Wrong placement - show hint
+                playError();
+                vibrate([50, 50, 50]);
+                showHint(gameState.draggedCard, expectedIndex);
+            }
+        }
+
+        // Show placement hint
+        function showHint(cardIndex, expectedPosition) {
+            const hint = document.getElementById('hintDisplay');
+            const range = getCurrentGenealogyRange();
+
+            let era = '';
+            if (cardIndex < 14) era = 'Patriarchs';
+            else if (cardIndex < 28) era = 'Kings of Judah';
+            else era = 'Post-Exile';
+
+            const direction = cardIndex < expectedPosition ? 'Earlier' : 'Later';
+            hint.textContent = `${direction} in the lineage (Era: ${era})`;
+            hint.classList.add('visible');
+
+            setTimeout(() => {
+                hint.classList.remove('visible');
+            }, 2000);
+        }
+
+        // Check win condition
+        function checkWinCondition() {
+            const range = getCurrentGenealogyRange();
+            let allPlaced = true;
+
+            for (let i = range.start; i <= range.end; i++) {
+                if (!gameState.placedCards.has(i)) {
+                    allPlaced = false;
+                    break;
+                }
+            }
+
+            if (allPlaced) {
+                setTimeout(() => {
+                    playWin();
+                    vibrate([100, 50, 100, 50, 200]);
+                    document.getElementById('finalScore').textContent = `Final Score: ${gameState.score}`;
+                    document.getElementById('winModal').classList.add('active');
+                    speak('Behold the Lineage! Congratulations!');
+                    saveProgress();
+                }, 500);
+            }
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('scoreDisplay').textContent = `Score: ${gameState.score}`;
+            document.getElementById('starsDisplay').textContent = `Stars: ${gameState.stars}`;
+            document.getElementById('levelIndicator').textContent =
+                `Level ${gameState.currentLevel + 1}: ${levels[gameState.currentLevel].name}`;
+        }
+
+        // Save/Load progress
+        function saveProgress() {
+            const saveData = {
+                score: gameState.score,
+                stars: gameState.stars,
+                highScore: Math.max(gameState.score, parseInt(localStorage.getItem('begat_highscore') || '0'))
+            };
+            localStorage.setItem('begat_progress', JSON.stringify(saveData));
+            localStorage.setItem('begat_highscore', saveData.highScore.toString());
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('begat_progress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.stars = data.stars || 0;
+            }
+        }
+
+        // Menu handlers
+        document.getElementById('menuBtn').addEventListener('click', () => {
+            document.getElementById('menuModal').classList.add('active');
+        });
+
+        document.getElementById('closeMenuBtn').addEventListener('click', () => {
+            document.getElementById('menuModal').classList.remove('active');
+        });
+
+        document.getElementById('newGameBtn').addEventListener('click', () => {
+            gameState.score = 0;
+            initGame();
+            document.getElementById('menuModal').classList.remove('active');
+        });
+
+        document.getElementById('levelSelectBtn').addEventListener('click', () => {
+            const levelOptions = document.getElementById('levelOptions');
+            levelOptions.innerHTML = '';
+
+            levels.forEach((level, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'menu-option';
+                btn.textContent = `${idx + 1}. ${level.name} (${level.difficulty})`;
+                btn.addEventListener('click', () => {
+                    gameState.currentLevel = idx;
+                    gameState.score = 0;
+                    initGame();
+                    document.getElementById('levelModal').classList.remove('active');
+                    document.getElementById('menuModal').classList.remove('active');
+                });
+                levelOptions.appendChild(btn);
+            });
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'menu-option';
+            closeBtn.textContent = 'Cancel';
+            closeBtn.addEventListener('click', () => {
+                document.getElementById('levelModal').classList.remove('active');
+            });
+            levelOptions.appendChild(closeBtn);
+
+            document.getElementById('levelModal').classList.add('active');
+        });
+
+        document.getElementById('toggleSoundBtn').addEventListener('click', () => {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            document.getElementById('toggleSoundBtn').textContent =
+                `Sound: ${gameState.soundEnabled ? 'ON' : 'OFF'}`;
+            if (gameState.soundEnabled) {
+                playChime();
+            }
+        });
+
+        document.getElementById('toggleSpeechBtn').addEventListener('click', () => {
+            gameState.speechEnabled = !gameState.speechEnabled;
+            document.getElementById('toggleSpeechBtn').textContent =
+                `Speech: ${gameState.speechEnabled ? 'ON' : 'OFF'}`;
+            if (gameState.speechEnabled) {
+                speak('Speech enabled');
+            }
+        });
+
+        document.getElementById('highContrastBtn').addEventListener('click', () => {
+            gameState.highContrast = !gameState.highContrast;
+            document.body.classList.toggle('high-contrast', gameState.highContrast);
+        });
+
+        document.getElementById('colorblindBtn').addEventListener('click', () => {
+            gameState.colorblind = !gameState.colorblind;
+            document.body.classList.toggle('colorblind', gameState.colorblind);
+        });
+
+        document.getElementById('playAgainBtn').addEventListener('click', () => {
+            document.getElementById('winModal').classList.remove('active');
+            gameState.score = 0;
+            initGame();
+        });
+
+        // PWA Install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('visible');
+        });
+
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const result = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+            }
+            document.getElementById('installPrompt').classList.remove('visible');
+        });
+
+        document.getElementById('dismissInstall').addEventListener('click', () => {
+            document.getElementById('installPrompt').classList.remove('visible');
+        });
+
+        // Service Worker for offline support
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'begat-v1';
+                self.addEventListener('install', e => {
+                    e.waitUntil(caches.open(CACHE_NAME));
+                });
+                self.addEventListener('fetch', e => {
+                    e.respondWith(
+                        caches.match(e.request).then(r => r || fetch(e.request))
+                    );
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                // Close any open modal or go back to games
+                if (document.getElementById('quizModal').classList.contains('active')) {
+                    document.getElementById('quizModal').classList.remove('active');
+                } else if (document.getElementById('menuModal').classList.contains('active')) {
+                    document.getElementById('menuModal').classList.remove('active');
+                } else if (document.getElementById('levelModal').classList.contains('active')) {
+                    document.getElementById('levelModal').classList.remove('active');
+                } else if (document.getElementById('winModal').classList.contains('active')) {
+                    document.getElementById('winModal').classList.remove('active');
+                } else {
+                    window.location.href = '../../games.html';
+                }
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            createStars();
+            loadProgress();
+            initGame();
+
+            // Initialize audio context on first interaction
+            document.addEventListener('click', () => initAudio(), { once: true });
+            document.addEventListener('touchstart', () => initAudio(), { once: true });
+
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 1000);
+        });
+
+        // Prevent zoom on double tap
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - (window.lastTouchEnd || 0) < 300) {
+                e.preventDefault();
+            }
+            window.lastTouchEnd = now;
+        }, { passive: false });
+    </script>
+</body>
+</html>
