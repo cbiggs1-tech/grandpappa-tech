@@ -80,7 +80,6 @@
         .header h1 {
             font-size: 2rem;
             color: var(--gold);
-            text-shadow: 0 0 20px var(--gold-glow);
             letter-spacing: 0.2em;
             margin-bottom: 0.25rem;
         }
@@ -147,23 +146,16 @@
         .timeline-slot.fixed {
             background: var(--parchment);
             border: 3px solid var(--gold);
-            box-shadow: 0 0 15px var(--gold-glow);
         }
 
         .timeline-slot.ready {
             background: var(--slot-ready);
             border-color: var(--gold);
-            animation: pulse-glow 2s ease-in-out infinite;
         }
 
         .timeline-slot.filled {
             background: var(--parchment);
             border: 3px solid var(--success);
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 10px var(--gold-glow); }
-            50% { box-shadow: 0 0 25px var(--gold-glow); }
         }
 
         .slot-name {
@@ -238,7 +230,7 @@
         }
 
         .card.unlocked {
-            box-shadow: 0 0 15px var(--gold-glow);
+            border-color: var(--gold);
         }
 
         .card.dragging {
@@ -300,7 +292,6 @@
             max-height: 90vh;
             overflow-y: auto;
             border: 4px solid var(--gold);
-            box-shadow: 0 0 50px var(--gold-glow);
         }
 
         .quiz-header {
@@ -428,6 +419,98 @@
             text-decoration: none;
         }
 
+        .music-btn {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--parchment);
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 0.9rem;
+            color: var(--ink);
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+
+        .music-btn.playing {
+            background: var(--gold);
+        }
+
+        .share-btn {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            width: 3rem;
+            height: 3rem;
+            background: var(--parchment);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 1.3rem;
+            color: var(--ink);
+        }
+
+        .share-modal {
+            background: var(--parchment);
+            border-radius: 20px;
+            padding: 1.5rem;
+            max-width: 95%;
+            width: 350px;
+            border: 4px solid var(--gold);
+            text-align: center;
+        }
+
+        .share-title {
+            font-size: 1.5rem;
+            color: var(--ink);
+            margin-bottom: 1rem;
+        }
+
+        .share-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border: 2px solid var(--gold);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .share-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .share-option {
+            padding: 1rem;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #f8f0e0 0%, var(--parchment) 100%);
+            border: 2px solid var(--parchment-dark);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .share-option:active {
+            transform: scale(0.98);
+        }
+
+        .share-status {
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: var(--success);
+        }
+
         .menu-modal {
             background: var(--parchment);
             border-radius: 20px;
@@ -489,7 +572,6 @@
             padding: 2rem;
             text-align: center;
             border: 4px solid var(--gold);
-            box-shadow: 0 0 100px var(--gold-glow);
             animation: win-appear 0.5s ease;
         }
 
@@ -501,7 +583,6 @@
         .win-title {
             font-size: 2rem;
             color: var(--gold);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             margin-bottom: 1rem;
         }
 
@@ -641,14 +722,7 @@
         .loading-title {
             font-size: 3rem;
             color: var(--gold);
-            text-shadow: 0 0 30px var(--gold-glow);
             margin-bottom: 1rem;
-            animation: glow-pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes glow-pulse {
-            0%, 100% { text-shadow: 0 0 20px var(--gold-glow); }
-            50% { text-shadow: 0 0 40px var(--gold-glow), 0 0 60px var(--gold-glow); }
         }
 
         .loading-text {
@@ -765,6 +839,33 @@
         <button class="install-btn" id="installBtn">Install</button>
         <button class="dismiss-btn" id="dismissInstall">Not Now</button>
     </div>
+
+    <!-- Background Music -->
+    <audio id="bgMusic" loop>
+        <source src="../../music/Ancestry.mp3" type="audio/mpeg">
+    </audio>
+    <button id="musicToggle" class="music-btn">MUSIC: ON</button>
+
+    <!-- Share Button -->
+    <button class="share-btn" id="shareBtn" title="Share Screenshot">&#128247;</button>
+
+    <!-- Share Modal -->
+    <div class="modal-overlay" id="shareModal">
+        <div class="share-modal">
+            <h2 class="share-title">Share Your Progress</h2>
+            <img id="sharePreview" class="share-preview" alt="Screenshot preview" style="display:none;">
+            <p id="shareStatus" class="share-status"></p>
+            <div class="share-options">
+                <button class="share-option" id="shareNativeBtn">&#128241; Share (Text/Apps)</button>
+                <button class="share-option" id="shareEmailBtn">&#9993; Send via Email</button>
+                <button class="share-option" id="downloadBtn">&#128190; Save Image</button>
+                <button class="share-option" id="closeShareBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- html2canvas library for screenshots -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         // Game Data - Modular structure for easy expansion
@@ -1543,6 +1644,200 @@
             document.getElementById('installPrompt').classList.remove('visible');
         });
 
+        // Background Music Control
+        const bgMusic = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('musicToggle');
+        bgMusic.volume = 0.4;
+
+        let musicAutoplayBlocked = false;
+
+        function updateMusicButtonState(playing) {
+            if (playing) {
+                musicBtn.textContent = 'MUSIC: ON';
+                musicBtn.classList.add('playing');
+            } else {
+                musicBtn.textContent = 'MUSIC: OFF';
+                musicBtn.classList.remove('playing');
+            }
+        }
+
+        // Try to play music on page load
+        bgMusic.play().then(() => {
+            updateMusicButtonState(true);
+        }).catch(() => {
+            musicAutoplayBlocked = true;
+            updateMusicButtonState(true);
+        });
+
+        // If autoplay was blocked, start music on first user interaction
+        document.addEventListener('click', function startMusicOnInteraction(e) {
+            if (e.target === musicBtn) return;
+            if (musicAutoplayBlocked) {
+                bgMusic.play().then(() => {
+                    musicAutoplayBlocked = false;
+                    updateMusicButtonState(true);
+                });
+            }
+        }, { once: true });
+
+        musicBtn.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.play();
+                updateMusicButtonState(true);
+                musicAutoplayBlocked = false;
+            } else {
+                bgMusic.pause();
+                updateMusicButtonState(false);
+            }
+        });
+
+        // Screenshot and Share functionality
+        let capturedImageBlob = null;
+        let capturedImageDataUrl = null;
+
+        async function captureScreenshot() {
+            const shareStatus = document.getElementById('shareStatus');
+            shareStatus.textContent = 'Capturing screenshot...';
+
+            try {
+                // Hide UI elements temporarily
+                const elementsToHide = [
+                    document.getElementById('shareBtn'),
+                    document.getElementById('musicToggle'),
+                    document.querySelector('.menu-btn'),
+                    document.querySelector('.home-btn')
+                ];
+                elementsToHide.forEach(el => { if (el) el.style.visibility = 'hidden'; });
+
+                // Capture the game area
+                const canvas = await html2canvas(document.body, {
+                    backgroundColor: '#1a1a2e',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+
+                // Restore UI elements
+                elementsToHide.forEach(el => { if (el) el.style.visibility = 'visible'; });
+
+                // Convert to blob and data URL
+                capturedImageDataUrl = canvas.toDataURL('image/png');
+
+                // Show preview
+                const preview = document.getElementById('sharePreview');
+                preview.src = capturedImageDataUrl;
+                preview.style.display = 'block';
+
+                // Convert to blob for sharing
+                canvas.toBlob((blob) => {
+                    capturedImageBlob = blob;
+                    shareStatus.textContent = 'Screenshot ready!';
+                }, 'image/png');
+
+            } catch (error) {
+                console.error('Screenshot error:', error);
+                shareStatus.textContent = 'Error capturing screenshot. Try again.';
+            }
+        }
+
+        // Share button click - capture and show modal
+        document.getElementById('shareBtn').addEventListener('click', async () => {
+            document.getElementById('shareModal').classList.add('active');
+            document.getElementById('sharePreview').style.display = 'none';
+            document.getElementById('shareStatus').textContent = '';
+            capturedImageBlob = null;
+            capturedImageDataUrl = null;
+            await captureScreenshot();
+        });
+
+        // Native share (for mobile - text/SMS/apps)
+        document.getElementById('shareNativeBtn').addEventListener('click', async () => {
+            const shareStatus = document.getElementById('shareStatus');
+
+            if (!capturedImageBlob) {
+                shareStatus.textContent = 'Please wait for screenshot to finish...';
+                return;
+            }
+
+            const shareText = `Check out my progress in Begat! Score: ${gameState.score} | Stars: ${gameState.stars} - Play at grandpapa.net`;
+
+            // Check if Web Share API with files is supported
+            if (navigator.canShare && navigator.canShare({ files: [new File([capturedImageBlob], 'begat-score.png', { type: 'image/png' })] })) {
+                try {
+                    const file = new File([capturedImageBlob], 'begat-score.png', { type: 'image/png' });
+                    await navigator.share({
+                        title: 'My Begat Score',
+                        text: shareText,
+                        files: [file]
+                    });
+                    shareStatus.textContent = 'Shared successfully!';
+                    playChime();
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        shareStatus.textContent = 'Share cancelled or failed.';
+                    }
+                }
+            } else if (navigator.share) {
+                // Share without image (text only)
+                try {
+                    await navigator.share({
+                        title: 'My Begat Score',
+                        text: shareText,
+                        url: 'https://grandpapa.net/play/begat/'
+                    });
+                    shareStatus.textContent = 'Shared successfully!';
+                    playChime();
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        shareStatus.textContent = 'Share cancelled.';
+                    }
+                }
+            } else {
+                shareStatus.textContent = 'Native sharing not supported. Try email or download.';
+            }
+        });
+
+        // Email share
+        document.getElementById('shareEmailBtn').addEventListener('click', () => {
+            const shareStatus = document.getElementById('shareStatus');
+
+            const subject = encodeURIComponent('Check out my Begat score!');
+            const body = encodeURIComponent(
+                `I'm playing Begat - the biblical genealogy game!\n\n` +
+                `My Score: ${gameState.score}\n` +
+                `Stars Earned: ${gameState.stars}\n` +
+                `Level: ${levels[gameState.currentLevel].name}\n\n` +
+                `Play the game at: https://grandpapa.net/play/begat/\n\n` +
+                `(Screenshot attached separately - save the image first then attach to email)`
+            );
+
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            shareStatus.textContent = 'Opening email... Save image first to attach!';
+        });
+
+        // Download image
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const shareStatus = document.getElementById('shareStatus');
+
+            if (!capturedImageDataUrl) {
+                shareStatus.textContent = 'Please wait for screenshot to finish...';
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.download = `begat-score-${Date.now()}.png`;
+            link.href = capturedImageDataUrl;
+            link.click();
+
+            shareStatus.textContent = 'Image saved!';
+            playChime();
+        });
+
+        // Close share modal
+        document.getElementById('closeShareBtn').addEventListener('click', () => {
+            document.getElementById('shareModal').classList.remove('active');
+        });
+
         // Service Worker for offline support
         if ('serviceWorker' in navigator) {
             const swCode = `
@@ -1572,6 +1867,8 @@
                     document.getElementById('levelModal').classList.remove('active');
                 } else if (document.getElementById('winModal').classList.contains('active')) {
                     document.getElementById('winModal').classList.remove('active');
+                } else if (document.getElementById('shareModal').classList.contains('active')) {
+                    document.getElementById('shareModal').classList.remove('active');
                 } else {
                     window.location.href = '../../games.html';
                 }

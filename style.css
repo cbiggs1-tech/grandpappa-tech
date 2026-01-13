@@ -198,21 +198,8 @@ header {
     font-size: 8px;
     line-height: 1;
     color: #0f0;
-    text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0a0;
     overflow-x: auto;
     white-space: pre;
-    animation: logo-glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes logo-glow {
-    0% {
-        text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0a0;
-        filter: brightness(1);
-    }
-    100% {
-        text-shadow: 0 0 15px #0f0, 0 0 30px #0f0, 0 0 45px #0a0, 0 0 60px #050;
-        filter: brightness(1.2);
-    }
 }
 
 @media (max-width: 600px) {
