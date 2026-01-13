@@ -754,6 +754,42 @@
                 height: 8rem;
             }
         }
+
+        /* Date Tooltip Styles */
+        .date-tooltip {
+            position: fixed;
+            background: rgba(15, 15, 26, 0.95);
+            color: var(--gold);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            z-index: 2000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            border: 2px solid var(--gold);
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .date-tooltip.visible {
+            opacity: 1;
+        }
+
+        .date-tooltip .tooltip-date {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .date-tooltip .tooltip-note {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--parchment);
+            font-weight: normal;
+            font-style: italic;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -790,6 +826,12 @@
     <button class="menu-btn" id="menuBtn">&#9776;</button>
 
     <div class="hint-display" id="hintDisplay"></div>
+
+    <!-- Date Tooltip -->
+    <div class="date-tooltip" id="dateTooltip">
+        <span class="tooltip-date" id="tooltipDate"></span>
+        <span class="tooltip-note">Approximate era based on biblical chronologies.</span>
+    </div>
 
     <div class="modal-overlay" id="quizModal">
         <div class="quiz-modal">
@@ -870,47 +912,47 @@
     <script>
         // Game Data - Modular structure for easy expansion
         const genealogy = [
-            { name: "Abraham", desc: ["Father of many nations, covenant with God (Gen 17:5)", "Tested with sacrifice of Isaac (Gen 22)", "Called from Ur, promised descendants as stars (Gen 12:1-3, 15:5)"], icon: "tent" },
-            { name: "Isaac", desc: ["Miracle son of Abraham and Sarah in old age (Gen 21:1-3)", "Father of Jacob and Esau, blessed deceiver (Gen 25:19-26, 27:1-40)", "Wells digger, covenant renewed (Gen 26:1-5, 23-25)"], icon: "altar" },
-            { name: "Jacob", desc: ["Renamed Israel after wrestling God (Gen 32:24-28)", "Father of 12 tribes, fled from Esau (Gen 27:41-45, 35:22-26)", "Dreamed of ladder to heaven (Gen 28:10-22)"], icon: "ladder" },
-            { name: "Judah", desc: ["Son of Jacob, tribe of Messiah and kings (Gen 49:8-10)", "Father of Perez via Tamar (Gen 38:1-30)", "Offered himself for Benjamin (Gen 44:18-34)"], icon: "scepter" },
-            { name: "Perez", desc: ["Twin son of Judah and Tamar, scarlet thread (Gen 38:27-30)", "Ancestor in Ruth's line to David (Ruth 4:18-22)", "Listed in Judahite clans (1 Chron 2:3-5)"], icon: "hand" },
-            { name: "Hezron", desc: ["Son of Perez, father of Ram (Ruth 4:18-19)", "Early Judahite in genealogy (1 Chron 2:5-9)", "Part of post-exile records (1 Chron 4:1)"], icon: "scroll" },
-            { name: "Ram", desc: ["Son of Hezron, also called Aram (Ruth 4:19)", "Father of Amminadab (1 Chron 2:9-10)", "In line from Judah to David (Matt 1:3-4)"], icon: "ram" },
-            { name: "Amminadab", desc: ["Son of Ram, father of Nahshon (Ruth 4:19-20)", "Grandfather of Elisheba, Aaron's wife (Ex 6:23)", "Judahite leader (1 Chron 2:10)"], icon: "banner" },
-            { name: "Nahshon", desc: ["Son of Amminadab, prince of Judah tribe (Num 1:7)", "Leader during wilderness wanderings (Num 2:3, 7:12)", "Offered first at tabernacle (Num 7:12-17)"], icon: "staff" },
-            { name: "Salmon", desc: ["Son of Nahshon, father of Boaz (Ruth 4:20-21)", "Married Rahab the Canaanite (Matt 1:5, Josh 6:25 implied)", "Post-exodus settler (1 Chron 2:10-11)"], icon: "fish" },
-            { name: "Boaz", desc: ["Son of Salmon, kinsman-redeemer of Ruth (Ruth 2:1-4:22)", "Wealthy Bethlehemite, married Moabite (Ruth 3:1-18)", "Ancestor of David (Ruth 4:17-22)"], icon: "sheaf" },
-            { name: "Obed", desc: ["Son of Boaz and Ruth, born in Bethlehem (Ruth 4:13-17)", "Father of Jesse (Ruth 4:17-22)", "Grandson raised by Naomi (Ruth 4:16)"], icon: "servant" },
-            { name: "Jesse", desc: ["Son of Obed, father of David (Ruth 4:22, 1 Sam 16:1)", "Bethlehemite with eight sons (1 Sam 17:12)", "Lineage in prophecies (Isa 11:1)"], icon: "tree" },
-            { name: "David", desc: ["Son of Jesse, anointed king by Samuel (1 Sam 16:1-13)", "Slew Goliath, man after God's heart (1 Sam 17:1-58, Acts 13:22)", "Psalmist and united Israel (2 Sam 5:1-5, Ps many)"], icon: "crown" },
-            { name: "Solomon", desc: ["Son of David and Bathsheba, built temple (2 Sam 12:24, 1 Kings 6:1-38)", "Wisest king, asked for wisdom (1 Kings 3:5-15)", "Wrote Proverbs, Ecclesiastes (Prov 1:1, Eccl 1:1)"], icon: "temple" },
-            { name: "Rehoboam", desc: ["Son of Solomon, first king of Judah (1 Kings 11:43)", "Rejected elders' advice, split kingdom (1 Kings 12:1-19)", "Fortified cities (2 Chron 11:5-12)"], icon: "split" },
-            { name: "Abijah", desc: ["Son of Rehoboam, warred with Israel (1 Kings 15:1-8)", "Relied on God in battle (2 Chron 13:1-22)", "Had 14 wives (2 Chron 13:21)"], icon: "sword" },
-            { name: "Asa", desc: ["Son of Abijah, reformed Judah (1 Kings 15:9-24)", "Removed idols, sought God (2 Chron 14:2-5)", "Defeated Ethiopians (2 Chron 14:9-15)"], icon: "reform" },
-            { name: "Jehoshaphat", desc: ["Son of Asa, strengthened Judah (1 Kings 22:41-50)", "Allied with Ahab, but sought prophets (2 Chron 18:1-34)", "Appointed judges (2 Chron 19:4-11)"], icon: "judge" },
-            { name: "Joram", desc: ["Son of Jehoshaphat, married Athaliah (2 Kings 8:16-24)", "Killed brothers, wicked reign (2 Chron 21:1-20)", "Struck with disease (2 Chron 21:18-19)"], icon: "plague" },
-            { name: "Uzziah", desc: ["Son of Joram (via Ahaziah/Joash/Amaziah), long reign (2 Kings 15:1-7)", "Prospered until pride, struck with leprosy (2 Chron 26:1-23)", "Built towers, army (2 Chron 26:9-15)"], icon: "tower" },
-            { name: "Jotham", desc: ["Son of Uzziah, ruled wisely (2 Kings 15:32-38)", "Built upper gate of temple (2 Chron 27:1-9)", "Conquered Ammonites (2 Chron 27:5)"], icon: "gate" },
-            { name: "Ahaz", desc: ["Son of Jotham, wicked, sacrificed son (2 Kings 16:1-20)", "Altar from Damascus (2 Chron 28:1-27)", "Besieged by Syria and Israel (Isa 7:1-9)"], icon: "altar" },
-            { name: "Hezekiah", desc: ["Son of Ahaz, reformed temple (2 Kings 18:1-8)", "Tunnel for water, prayed for life (2 Kings 20:1-11, 2 Chron 32:24-31)", "Defied Sennacherib (Isa 36-37)"], icon: "tunnel" },
-            { name: "Manasseh", desc: ["Son of Hezekiah, longest reign, wicked then repented (2 Kings 21:1-18)", "Built altars to stars, shed blood (2 Chron 33:1-20)", "Captive in Babylon, humbled (2 Chron 33:11-13)"], icon: "chains" },
-            { name: "Amon", desc: ["Son of Manasseh, wicked, assassinated (2 Kings 21:19-26)", "Followed father's early sins (2 Chron 33:21-25)", "Short two-year reign"], icon: "dagger" },
-            { name: "Josiah", desc: ["Son of Amon, great reformer (2 Kings 22:1-23:30)", "Found law book, Passover revival (2 Chron 34:1-35:27)", "Killed at Megiddo (2 Kings 23:29-30)"], icon: "book" },
-            { name: "Jeconiah", desc: ["Son of Josiah (via Jehoiakim), exiled to Babylon (2 Kings 24:6-16)", "Also called Coniah/Jehoiachin (Jer 22:24-30)", "Released by Evil-Merodach (2 Kings 25:27-30)"], icon: "exile" },
-            { name: "Shealtiel", desc: ["Son of Jeconiah, post-exile (1 Chron 3:17-19)", "Father of Zerubbabel (Ezra 3:2)", "In messianic line (Hag 2:23 implied)"], icon: "chain" },
-            { name: "Zerubbabel", desc: ["Son of Shealtiel, governor of Judah (Ezra 2:2, Hag 1:1)", "Led temple rebuild (Ezra 3:8-13, Zech 4:6-10)", "Signet ring of God (Hag 2:23)"], icon: "temple" },
-            { name: "Abiud", desc: ["Son of Zerubbabel (Matt 1:13, possibly via 1 Chron 3:19-24 branches)", "Post-exile ancestor"], icon: "branch" },
-            { name: "Eliakim", desc: ["Son of Abiud (Matt 1:13)", "In line to Joseph"], icon: "key" },
-            { name: "Azor", desc: ["Son of Eliakim (Matt 1:13)", "Hellenistic-era name in genealogy"], icon: "star" },
-            { name: "Zadok", desc: ["Son of Azor (Matt 1:14)", "Possibly priestly ties (like 1 Chron 6)"], icon: "priest" },
-            { name: "Achim", desc: ["Son of Zadok (Matt 1:14)", "Post-exile figure"], icon: "scroll" },
-            { name: "Eliud", desc: ["Son of Achim (Matt 1:14)", "Ancestor in Matthew's list"], icon: "light" },
-            { name: "Eleazar", desc: ["Son of Eliud (Matt 1:15)", "Common priestly name (Ex 6:23)"], icon: "altar" },
-            { name: "Matthan", desc: ["Son of Eleazar (Matt 1:15)", "Grandfather of Joseph"], icon: "father" },
-            { name: "Jacob", desc: ["Son of Matthan, father of Joseph (Matt 1:15-16)", "Not the patriarch, later Jacob"], icon: "staff" },
-            { name: "Joseph", desc: ["Son of Jacob, husband of Mary (Matt 1:16)", "Righteous man, dreams from angel (Matt 1:18-25, 2:13-23)", "Carpenter in Nazareth (Matt 13:55)"], icon: "carpenter" },
-            { name: "Jesus", desc: ["Son of Joseph (legally), the Christ (Matt 1:16-17)", "Born in Bethlehem, fulfilled prophecies (Mic 5:2, Isa 7:14)", "Savior, Emmanuel (Matt 1:21-23)"], icon: "lamb" }
+            { name: "Abraham", desc: ["Father of many nations, covenant with God (Gen 17:5)", "Tested with sacrifice of Isaac (Gen 22)", "Called from Ur, promised descendants as stars (Gen 12:1-3, 15:5)"], icon: "tent", dates: "~2166–1991 BC" },
+            { name: "Isaac", desc: ["Miracle son of Abraham and Sarah in old age (Gen 21:1-3)", "Father of Jacob and Esau, blessed deceiver (Gen 25:19-26, 27:1-40)", "Wells digger, covenant renewed (Gen 26:1-5, 23-25)"], icon: "altar", dates: "~2066–1886 BC" },
+            { name: "Jacob", desc: ["Renamed Israel after wrestling God (Gen 32:24-28)", "Father of 12 tribes, fled from Esau (Gen 27:41-45, 35:22-26)", "Dreamed of ladder to heaven (Gen 28:10-22)"], icon: "ladder", dates: "~2006–1859 BC" },
+            { name: "Judah", desc: ["Son of Jacob, tribe of Messiah and kings (Gen 49:8-10)", "Father of Perez via Tamar (Gen 38:1-30)", "Offered himself for Benjamin (Gen 44:18-34)"], icon: "scepter", dates: "~1950–1800 BC" },
+            { name: "Perez", desc: ["Twin son of Judah and Tamar, scarlet thread (Gen 38:27-30)", "Ancestor in Ruth's line to David (Ruth 4:18-22)", "Listed in Judahite clans (1 Chron 2:3-5)"], icon: "hand", dates: "~1850–1800 BC" },
+            { name: "Hezron", desc: ["Son of Perez, father of Ram (Ruth 4:18-19)", "Early Judahite in genealogy (1 Chron 2:5-9)", "Part of post-exile records (1 Chron 4:1)"], icon: "scroll", dates: "~1800–1700 BC" },
+            { name: "Ram", desc: ["Son of Hezron, also called Aram (Ruth 4:19)", "Father of Amminadab (1 Chron 2:9-10)", "In line from Judah to David (Matt 1:3-4)"], icon: "ram", dates: "~1750–1700 BC" },
+            { name: "Amminadab", desc: ["Son of Ram, father of Nahshon (Ruth 4:19-20)", "Grandfather of Elisheba, Aaron's wife (Ex 6:23)", "Judahite leader (1 Chron 2:10)"], icon: "banner", dates: "~1700–1650 BC" },
+            { name: "Nahshon", desc: ["Son of Amminadab, prince of Judah tribe (Num 1:7)", "Leader during wilderness wanderings (Num 2:3, 7:12)", "Offered first at tabernacle (Num 7:12-17)"], icon: "staff", dates: "~1650–1600 BC" },
+            { name: "Salmon", desc: ["Son of Nahshon, father of Boaz (Ruth 4:20-21)", "Married Rahab the Canaanite (Matt 1:5, Josh 6:25 implied)", "Post-exodus settler (1 Chron 2:10-11)"], icon: "fish", dates: "~1600–1550 BC" },
+            { name: "Boaz", desc: ["Son of Salmon, kinsman-redeemer of Ruth (Ruth 2:1-4:22)", "Wealthy Bethlehemite, married Moabite (Ruth 3:1-18)", "Ancestor of David (Ruth 4:17-22)"], icon: "sheaf", dates: "~1400–1350 BC" },
+            { name: "Obed", desc: ["Son of Boaz and Ruth, born in Bethlehem (Ruth 4:13-17)", "Father of Jesse (Ruth 4:17-22)", "Grandson raised by Naomi (Ruth 4:16)"], icon: "servant", dates: "~1350–1300 BC" },
+            { name: "Jesse", desc: ["Son of Obed, father of David (Ruth 4:22, 1 Sam 16:1)", "Bethlehemite with eight sons (1 Sam 17:12)", "Lineage in prophecies (Isa 11:1)"], icon: "tree", dates: "~1300–1250 BC" },
+            { name: "David", desc: ["Son of Jesse, anointed king by Samuel (1 Sam 16:1-13)", "Slew Goliath, man after God's heart (1 Sam 17:1-58, Acts 13:22)", "Psalmist and united Israel (2 Sam 5:1-5, Ps many)"], icon: "crown", dates: "~1040–970 BC" },
+            { name: "Solomon", desc: ["Son of David and Bathsheba, built temple (2 Sam 12:24, 1 Kings 6:1-38)", "Wisest king, asked for wisdom (1 Kings 3:5-15)", "Wrote Proverbs, Ecclesiastes (Prov 1:1, Eccl 1:1)"], icon: "temple", dates: "~990–931 BC" },
+            { name: "Rehoboam", desc: ["Son of Solomon, first king of Judah (1 Kings 11:43)", "Rejected elders' advice, split kingdom (1 Kings 12:1-19)", "Fortified cities (2 Chron 11:5-12)"], icon: "split", dates: "~975–913 BC" },
+            { name: "Abijah", desc: ["Son of Rehoboam, warred with Israel (1 Kings 15:1-8)", "Relied on God in battle (2 Chron 13:1-22)", "Had 14 wives (2 Chron 13:21)"], icon: "sword", dates: "~950–900 BC" },
+            { name: "Asa", desc: ["Son of Abijah, reformed Judah (1 Kings 15:9-24)", "Removed idols, sought God (2 Chron 14:2-5)", "Defeated Ethiopians (2 Chron 14:9-15)"], icon: "reform", dates: "~940–870 BC" },
+            { name: "Jehoshaphat", desc: ["Son of Asa, strengthened Judah (1 Kings 22:41-50)", "Allied with Ahab, but sought prophets (2 Chron 18:1-34)", "Appointed judges (2 Chron 19:4-11)"], icon: "judge", dates: "~900–848 BC" },
+            { name: "Joram", desc: ["Son of Jehoshaphat, married Athaliah (2 Kings 8:16-24)", "Killed brothers, wicked reign (2 Chron 21:1-20)", "Struck with disease (2 Chron 21:18-19)"], icon: "plague", dates: "~880–841 BC" },
+            { name: "Uzziah", desc: ["Son of Joram (via Ahaziah/Joash/Amaziah), long reign (2 Kings 15:1-7)", "Prospered until pride, struck with leprosy (2 Chron 26:1-23)", "Built towers, army (2 Chron 26:9-15)"], icon: "tower", dates: "~810–739 BC" },
+            { name: "Jotham", desc: ["Son of Uzziah, ruled wisely (2 Kings 15:32-38)", "Built upper gate of temple (2 Chron 27:1-9)", "Conquered Ammonites (2 Chron 27:5)"], icon: "gate", dates: "~780–735 BC" },
+            { name: "Ahaz", desc: ["Son of Jotham, wicked, sacrificed son (2 Kings 16:1-20)", "Altar from Damascus (2 Chron 28:1-27)", "Besieged by Syria and Israel (Isa 7:1-9)"], icon: "altar", dates: "~760–715 BC" },
+            { name: "Hezekiah", desc: ["Son of Ahaz, reformed temple (2 Kings 18:1-8)", "Tunnel for water, prayed for life (2 Kings 20:1-11, 2 Chron 32:24-31)", "Defied Sennacherib (Isa 36-37)"], icon: "tunnel", dates: "~740–687 BC" },
+            { name: "Manasseh", desc: ["Son of Hezekiah, longest reign, wicked then repented (2 Kings 21:1-18)", "Built altars to stars, shed blood (2 Chron 33:1-20)", "Captive in Babylon, humbled (2 Chron 33:11-13)"], icon: "chains", dates: "~710–643 BC" },
+            { name: "Amon", desc: ["Son of Manasseh, wicked, assassinated (2 Kings 21:19-26)", "Followed father's early sins (2 Chron 33:21-25)", "Short two-year reign"], icon: "dagger", dates: "~670–640 BC" },
+            { name: "Josiah", desc: ["Son of Amon, great reformer (2 Kings 22:1-23:30)", "Found law book, Passover revival (2 Chron 34:1-35:27)", "Killed at Megiddo (2 Kings 23:29-30)"], icon: "book", dates: "~648–609 BC" },
+            { name: "Jeconiah", desc: ["Son of Josiah (via Jehoiakim), exiled to Babylon (2 Kings 24:6-16)", "Also called Coniah/Jehoiachin (Jer 22:24-30)", "Released by Evil-Merodach (2 Kings 25:27-30)"], icon: "exile", dates: "~615–560 BC" },
+            { name: "Shealtiel", desc: ["Son of Jeconiah, post-exile (1 Chron 3:17-19)", "Father of Zerubbabel (Ezra 3:2)", "In messianic line (Hag 2:23 implied)"], icon: "chain", dates: "~580–520 BC" },
+            { name: "Zerubbabel", desc: ["Son of Shealtiel, governor of Judah (Ezra 2:2, Hag 1:1)", "Led temple rebuild (Ezra 3:8-13, Zech 4:6-10)", "Signet ring of God (Hag 2:23)"], icon: "temple", dates: "~570–510 BC" },
+            { name: "Abiud", desc: ["Son of Zerubbabel (Matt 1:13, possibly via 1 Chron 3:19-24 branches)", "Post-exile ancestor"], icon: "branch", dates: "~500–470 BC" },
+            { name: "Eliakim", desc: ["Son of Abiud (Matt 1:13)", "In line to Joseph"], icon: "key", dates: "~470–440 BC" },
+            { name: "Azor", desc: ["Son of Eliakim (Matt 1:13)", "Hellenistic-era name in genealogy"], icon: "star", dates: "~440–410 BC" },
+            { name: "Zadok", desc: ["Son of Azor (Matt 1:14)", "Possibly priestly ties (like 1 Chron 6)"], icon: "priest", dates: "~410–380 BC" },
+            { name: "Achim", desc: ["Son of Zadok (Matt 1:14)", "Post-exile figure"], icon: "scroll", dates: "~380–350 BC" },
+            { name: "Eliud", desc: ["Son of Achim (Matt 1:14)", "Ancestor in Matthew's list"], icon: "light", dates: "~350–320 BC" },
+            { name: "Eleazar", desc: ["Son of Eliud (Matt 1:15)", "Common priestly name (Ex 6:23)"], icon: "altar", dates: "~320–290 BC" },
+            { name: "Matthan", desc: ["Son of Eleazar (Matt 1:15)", "Grandfather of Joseph"], icon: "father", dates: "~290–260 BC" },
+            { name: "Jacob", desc: ["Son of Matthan, father of Joseph (Matt 1:15-16)", "Not the patriarch, later Jacob"], icon: "staff", dates: "~260–230 BC" },
+            { name: "Joseph", desc: ["Son of Jacob, husband of Mary (Matt 1:16)", "Righteous man, dreams from angel (Matt 1:18-25, 2:13-23)", "Carpenter in Nazareth (Matt 13:55)"], icon: "carpenter", dates: "~20 BC–AD 20" },
+            { name: "Jesus", desc: ["Son of Joseph (legally), the Christ (Matt 1:16-17)", "Born in Bethlehem, fulfilled prophecies (Mic 5:2, Isa 7:14)", "Savior, Emmanuel (Matt 1:21-23)"], icon: "lamb", dates: "~4 BC–AD 30" }
         ];
 
         // Level configurations
@@ -1003,6 +1045,80 @@
                 utterance.pitch = 1;
                 speechSynthesis.speak(utterance);
             }
+        }
+
+        // Date Tooltip functionality
+        const dateTooltip = document.getElementById('dateTooltip');
+        const tooltipDateEl = document.getElementById('tooltipDate');
+        let tooltipTimeout = null;
+        let currentTooltipElement = null;
+
+        function showDateTooltip(element, personIndex, clientX, clientY) {
+            const person = genealogy[personIndex];
+            if (!person || !person.dates) return;
+
+            tooltipDateEl.textContent = person.dates;
+            dateTooltip.classList.add('visible');
+
+            // Position tooltip near the element
+            const tooltipRect = dateTooltip.getBoundingClientRect();
+            let x = clientX - tooltipRect.width / 2;
+            let y = clientY - tooltipRect.height - 15;
+
+            // Keep tooltip on screen
+            if (x < 10) x = 10;
+            if (x + tooltipRect.width > window.innerWidth - 10) {
+                x = window.innerWidth - tooltipRect.width - 10;
+            }
+            if (y < 10) {
+                y = clientY + 20; // Show below if no room above
+            }
+
+            dateTooltip.style.left = x + 'px';
+            dateTooltip.style.top = y + 'px';
+
+            currentTooltipElement = element;
+
+            // Speak the date if speech is enabled
+            if (gameState.speechEnabled) {
+                speak(person.dates);
+            }
+        }
+
+        function hideDateTooltip() {
+            dateTooltip.classList.remove('visible');
+            currentTooltipElement = null;
+            if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = null;
+            }
+        }
+
+        // Mouse hover handlers for tooltip
+        function handleMouseEnterForTooltip(e, personIndex) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            showDateTooltip(e.currentTarget, personIndex, rect.left + rect.width / 2, rect.top);
+        }
+
+        function handleMouseLeaveForTooltip() {
+            hideDateTooltip();
+        }
+
+        // Touch/long-press handlers for tooltip on mobile
+        function handleTouchStartForTooltip(e, personIndex) {
+            const touch = e.touches[0];
+            tooltipTimeout = setTimeout(() => {
+                showDateTooltip(e.currentTarget, personIndex, touch.clientX, touch.clientY);
+            }, 400); // Show after 400ms hold
+        }
+
+        function handleTouchEndForTooltip() {
+            if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = null;
+            }
+            // Hide tooltip after a delay on touch end
+            setTimeout(hideDateTooltip, 1500);
         }
 
         // Vibration
@@ -1134,6 +1250,13 @@
                     nameDiv.className = 'slot-name';
                     nameDiv.textContent = person.name;
                     slot.appendChild(nameDiv);
+
+                    // Add tooltip events for date display
+                    slot.dataset.personIndex = actualIndex;
+                    slot.addEventListener('mouseenter', (e) => handleMouseEnterForTooltip(e, actualIndex));
+                    slot.addEventListener('mouseleave', handleMouseLeaveForTooltip);
+                    slot.addEventListener('touchstart', (e) => handleTouchStartForTooltip(e, actualIndex), { passive: true });
+                    slot.addEventListener('touchend', handleTouchEndForTooltip);
                 } else {
                     slot.classList.add('ready');
                     slot.innerHTML = '<span style="font-size:2rem;color:var(--gold);opacity:0.5">?</span>';
@@ -1195,6 +1318,10 @@
                     card.addEventListener('dragstart', handleDragStart);
                     card.addEventListener('dragend', handleDragEnd);
                     card.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+                    // Add tooltip events for date display (mouse hover)
+                    card.addEventListener('mouseenter', (e) => handleMouseEnterForTooltip(e, idx));
+                    card.addEventListener('mouseleave', handleMouseLeaveForTooltip);
                 } else {
                     card.classList.add('locked');
 
