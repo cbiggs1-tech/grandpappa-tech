@@ -419,26 +419,6 @@
             text-decoration: none;
         }
 
-        .help-btn {
-            position: fixed;
-            top: 1rem;
-            left: 4.5rem;
-            width: 3rem;
-            height: 3rem;
-            background: var(--parchment);
-            border: 2px solid var(--gold);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 100;
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--ink);
-            text-decoration: none;
-        }
-
         .music-btn {
             position: fixed;
             bottom: 1rem;
@@ -841,20 +821,12 @@
             }
 
             /* Navigation buttons */
-            .home-btn, .help-btn {
+            .home-btn {
                 width: 2.2rem;
                 height: 2.2rem;
                 font-size: 0.9rem;
                 top: 0.5rem;
-            }
-
-            .home-btn {
                 left: 0.5rem;
-            }
-
-            .help-btn {
-                left: 3rem;
-                font-size: 1.1rem;
             }
 
             .menu-btn {
@@ -1089,7 +1061,6 @@
     <div class="stars" id="stars"></div>
 
     <a href="../../games.html" class="home-btn" title="Back to Games">ESC</a>
-    <a href="readme.html" class="help-btn" title="How to Play">?</a>
 
     <header class="header">
         <h1>BEGAT</h1>
@@ -1138,6 +1109,7 @@
         <div class="menu-modal">
             <h2 class="menu-title">Menu</h2>
             <div class="menu-options">
+                <button class="menu-option" id="howToPlayBtn">How to Play</button>
                 <button class="menu-option" id="newGameBtn">New Game</button>
                 <button class="menu-option" id="levelSelectBtn">Select Level</button>
                 <button class="menu-option" id="toggleSoundBtn">Sound: ON</button>
@@ -1970,6 +1942,10 @@
             document.getElementById('menuModal').classList.remove('active');
         });
 
+        document.getElementById('howToPlayBtn').addEventListener('click', () => {
+            window.location.href = 'readme.html';
+        });
+
         document.getElementById('newGameBtn').addEventListener('click', () => {
             gameState.score = 0;
             initGame();
@@ -2121,8 +2097,7 @@
                     document.getElementById('shareBtn'),
                     document.getElementById('musicToggle'),
                     document.querySelector('.menu-btn'),
-                    document.querySelector('.home-btn'),
-                    document.querySelector('.help-btn')
+                    document.querySelector('.home-btn')
                 ];
                 elementsToHide.forEach(el => { if (el) el.style.visibility = 'hidden'; });
 
