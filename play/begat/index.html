@@ -1516,28 +1516,34 @@
         }
 
         /**
-         * Update timer display with remaining time
+         * Update timer display with remaining time (continues into negative when over limit)
          */
         function updateTimerDisplay() {
             const timerEl = document.getElementById('timerDisplay');
             const level = levels[gameState.currentLevel];
             const timeLimit = level.timeLimit;
-            const remaining = Math.max(0, timeLimit - gameState.elapsedSeconds);
+            const remaining = timeLimit - gameState.elapsedSeconds;
 
-            const minutes = Math.floor(remaining / 60);
-            const seconds = remaining % 60;
-            timerEl.textContent = `⏱ ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            // Format time - show negative if over limit
+            const absRemaining = Math.abs(remaining);
+            const minutes = Math.floor(absRemaining / 60);
+            const seconds = absRemaining % 60;
+            const sign = remaining < 0 ? '-' : '';
+            timerEl.textContent = `⏱ ${sign}${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-            // Flash warning when under 30 seconds
-            if (remaining <= 30 && remaining > 0) {
+            // Flash warning when under 30 seconds or over time limit
+            if (remaining < 0) {
+                // Over time limit - flash red continuously
                 timerEl.classList.add('warning');
                 timerEl.classList.remove('bonus-eligible');
-            } else if (remaining > 0 && gameState.elapsedSeconds < timeLimit) {
-                timerEl.classList.remove('warning');
-                // Show green when still eligible for speed bonus
-                timerEl.classList.add('bonus-eligible');
+            } else if (remaining <= 30) {
+                // Under 30 seconds - flash warning
+                timerEl.classList.add('warning');
+                timerEl.classList.remove('bonus-eligible');
             } else {
-                timerEl.classList.remove('warning', 'bonus-eligible');
+                // On track for bonus - show green
+                timerEl.classList.remove('warning');
+                timerEl.classList.add('bonus-eligible');
             }
         }
 
@@ -2224,6 +2230,7 @@
         let isTouchDragging = false;
 
         function handleTouchStart(e) {
+            e.preventDefault(); // Prevent default touch behavior to enable dragging
             const card = e.currentTarget;
             const touch = e.touches[0];
             touchStartX = touch.clientX;
