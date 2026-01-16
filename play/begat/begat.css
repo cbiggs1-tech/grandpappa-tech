@@ -1,0 +1,1494 @@
+/**
+ * BEGAT - Biblical Genealogy Game
+ * Main Stylesheet
+ *
+ * CSS Variables define the color scheme and can be overridden
+ * for accessibility modes (high contrast, colorblind).
+ */
+
+/* ==============================================
+   CSS RESET & VARIABLES
+   ============================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+:root {
+    --parchment: #f4e4bc;
+    --parchment-dark: #d4c4a0;
+    --ink: #2c1810;
+    --gold: #d4af37;
+    --gold-glow: rgba(212, 175, 55, 0.6);
+    --night-sky: #1a1a2e;
+    --night-deep: #0f0f1a;
+    --star-white: #fffef0;
+    --success: #4a7c59;
+    --error: #8b4049;
+    --slot-empty: rgba(244, 228, 188, 0.2);
+    --slot-ready: rgba(212, 175, 55, 0.4);
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--night-deep);
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, var(--night-sky) 0%, var(--night-deep) 100%);
+    position: relative;
+}
+
+/* ==============================================
+   STARRY BACKGROUND ANIMATION
+   ============================================== */
+
+.stars {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.star {
+    position: absolute;
+    background: var(--star-white);
+    border-radius: 50%;
+    animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* ==============================================
+   HEADER & SCORE DISPLAY
+   ============================================== */
+
+.header {
+    padding: 1rem;
+    text-align: center;
+    z-index: 10;
+    background: linear-gradient(180deg, rgba(26, 26, 46, 0.95) 0%, transparent 100%);
+}
+
+.header h1 {
+    font-size: 2rem;
+    color: var(--gold);
+    letter-spacing: 0.2em;
+    margin-bottom: 0.25rem;
+}
+
+.header .subtitle {
+    font-size: 1rem;
+    color: var(--parchment);
+    opacity: 0.8;
+}
+
+.score-display {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    color: var(--gold);
+}
+
+/* ==============================================
+   TIMER DISPLAY
+   ============================================== */
+
+.timer-display {
+    font-family: 'Courier New', monospace;
+    font-size: 1.3rem;
+    color: var(--gold);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.3rem 0.8rem;
+    border-radius: 8px;
+    border: 2px solid var(--gold);
+    margin-top: 0.5rem;
+    display: inline-block;
+}
+
+.timer-display.warning {
+    animation: timer-flash 0.5s ease-in-out infinite;
+    border-color: #ff4444;
+    color: #ff4444;
+}
+
+@keyframes timer-flash {
+    0%, 100% { opacity: 1; background: rgba(255, 68, 68, 0.2); }
+    50% { opacity: 0.6; background: rgba(255, 68, 68, 0.4); }
+}
+
+.timer-display.bonus-eligible {
+    color: #4aff4a;
+    border-color: #4aff4a;
+}
+
+/* ==============================================
+   MAIN GAME CONTAINER
+   ============================================== */
+
+.game-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    z-index: 5;
+}
+
+/* ==============================================
+   TIMELINE AREA (Upper section - 65%)
+   ============================================== */
+
+.timeline-area {
+    flex: 0 0 65%;
+    padding: 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    align-items: center;
+    -webkit-overflow-scrolling: touch;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.timeline {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    min-width: max-content;
+    align-items: center;
+}
+
+.timeline-slot {
+    width: 5rem;
+    height: 7rem;
+    min-width: 5rem;
+    border: 3px dashed var(--parchment-dark);
+    border-radius: 12px;
+    background: var(--slot-empty);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.timeline-slot.fixed {
+    background: var(--parchment);
+    border: 3px solid var(--gold);
+}
+
+.timeline-slot.ready {
+    background: var(--slot-ready);
+    border-color: var(--gold);
+}
+
+.timeline-slot.filled {
+    background: var(--parchment);
+    border: 3px solid var(--success);
+}
+
+/* Slot contents - pointer-events none to allow touch to pass through */
+.slot-name {
+    font-size: 0.85rem;
+    color: var(--ink);
+    text-align: center;
+    font-weight: bold;
+    padding: 0.25rem;
+    pointer-events: none;
+}
+
+.slot-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 0.25rem;
+    pointer-events: none;
+}
+
+.connector {
+    width: 1.5rem;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--parchment-dark));
+    flex-shrink: 0;
+}
+
+/* ==============================================
+   CARD POOL AREA (Lower section - 35%)
+   ============================================== */
+
+.card-pool-area {
+    flex: 0 0 35%;
+    background: linear-gradient(0deg, rgba(15, 15, 26, 0.95) 0%, rgba(26, 26, 46, 0.8) 100%);
+    border-top: 2px solid var(--gold);
+    padding: 0.75rem;
+    overflow-y: auto;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.card-pool-label {
+    color: var(--parchment);
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
+}
+
+.card-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    padding-bottom: 1rem;
+}
+
+/* Time scale with date markers */
+.time-scale {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 1rem;
+    margin-bottom: 0.5rem;
+    height: 2rem;
+    border-bottom: 2px solid var(--gold);
+    position: relative;
+}
+
+.time-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.time-marker::after {
+    content: '';
+    width: 2px;
+    height: 8px;
+    background: var(--gold);
+    position: absolute;
+    bottom: -2px;
+}
+
+.time-marker-label {
+    font-size: 0.65rem;
+    color: var(--gold);
+    white-space: nowrap;
+    margin-bottom: 4px;
+}
+
+/* ==============================================
+   CARDS (Draggable ancestor cards)
+   ============================================== */
+
+.card {
+    width: 4.5rem;
+    height: 6rem;
+    min-width: 4.5rem;
+    background: linear-gradient(135deg, var(--parchment) 0%, var(--parchment-dark) 100%);
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.card.locked {
+    background: linear-gradient(135deg, #3a3a5a 0%, #2a2a4a 100%);
+    -webkit-user-drag: none;
+}
+
+.card.locked .card-icon {
+    opacity: 0.5;
+}
+
+.card.unlocked {
+    border-color: var(--gold);
+}
+
+.card.dragging {
+    transform: scale(1.1);
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.card-icon {
+    width: 2rem;
+    height: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+.card-name {
+    font-size: 0.7rem;
+    color: var(--ink);
+    text-align: center;
+    font-weight: bold;
+    padding: 0 0.25rem;
+}
+
+.card.locked .card-name {
+    color: var(--parchment);
+    opacity: 0.6;
+}
+
+.card-question-mark {
+    font-size: 1.5rem;
+    color: var(--gold);
+    opacity: 0.8;
+}
+
+/* ==============================================
+   QUIZ MODAL
+   ============================================== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.quiz-modal {
+    background: var(--parchment);
+    border-radius: 20px;
+    padding: 1.5rem;
+    max-width: 95%;
+    width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 4px solid var(--gold);
+}
+
+.quiz-header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.quiz-header h2 {
+    color: var(--ink);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.quiz-description {
+    font-size: 1.25rem;
+    color: var(--ink);
+    line-height: 1.6;
+    padding: 1rem;
+    background: rgba(212, 175, 55, 0.2);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.quiz-question {
+    font-size: 1.1rem;
+    color: var(--ink);
+    text-align: center;
+    margin-bottom: 1rem;
+    font-style: italic;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.quiz-option {
+    padding: 1rem 1.5rem;
+    font-size: 1.25rem;
+    background: linear-gradient(135deg, #f8f0e0 0%, var(--parchment) 100%);
+    border: 3px solid var(--parchment-dark);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    color: var(--ink);
+    min-height: 3.5rem;
+}
+
+.quiz-option:active {
+    transform: scale(0.98);
+}
+
+.quiz-option.correct {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+.quiz-option.wrong {
+    background: var(--error);
+    color: white;
+    border-color: var(--error);
+    animation: shake 0.5s ease;
+}
+
+.quiz-option.assisted-highlight {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold);
+    animation: pulse-gold 1s ease-in-out infinite;
+}
+
+@keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 5px var(--gold); }
+    50% { box-shadow: 0 0 20px var(--gold), 0 0 30px var(--gold-glow); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-10px); }
+    40%, 80% { transform: translateX(10px); }
+}
+
+.quiz-feedback {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.quiz-feedback.success {
+    color: var(--success);
+}
+
+.quiz-feedback.error {
+    color: var(--error);
+}
+
+/* ==============================================
+   NAVIGATION BUTTONS (Menu, Home, Share)
+   ============================================== */
+
+.menu-btn {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    width: 3rem;
+    height: 3rem;
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 1.5rem;
+    color: var(--ink);
+}
+
+.home-btn {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    width: 3rem;
+    height: 3rem;
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 1.2rem;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.music-btn {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 0.9rem;
+    color: var(--ink);
+    font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.music-btn.playing {
+    background: var(--gold);
+}
+
+.share-btn {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    width: 3rem;
+    height: 3rem;
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 1.3rem;
+    color: var(--ink);
+}
+
+/* ==============================================
+   SHARE MODAL
+   ============================================== */
+
+.share-modal {
+    background: var(--parchment);
+    border-radius: 20px;
+    padding: 1.5rem;
+    max-width: 95%;
+    width: 350px;
+    border: 4px solid var(--gold);
+    text-align: center;
+}
+
+.share-title {
+    font-size: 1.5rem;
+    color: var(--ink);
+    margin-bottom: 1rem;
+}
+
+.share-preview {
+    max-width: 100%;
+    max-height: 200px;
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.share-option {
+    padding: 1rem;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #f8f0e0 0%, var(--parchment) 100%);
+    border: 2px solid var(--parchment-dark);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.share-option:active {
+    transform: scale(0.98);
+}
+
+.share-status {
+    margin-top: 1rem;
+    font-size: 1rem;
+    color: var(--success);
+}
+
+/* ==============================================
+   MENU MODAL
+   ============================================== */
+
+.menu-modal {
+    background: var(--parchment);
+    border-radius: 20px;
+    padding: 1.5rem;
+    max-width: 95%;
+    width: 350px;
+    border: 4px solid var(--gold);
+}
+
+.menu-title {
+    text-align: center;
+    font-size: 1.5rem;
+    color: var(--ink);
+    margin-bottom: 1rem;
+}
+
+.menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.menu-option {
+    padding: 1rem;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #f8f0e0 0%, var(--parchment) 100%);
+    border: 2px solid var(--parchment-dark);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    color: var(--ink);
+}
+
+.menu-option:active {
+    transform: scale(0.98);
+}
+
+.close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--error);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==============================================
+   WIN SCREEN MODAL
+   ============================================== */
+
+.win-modal {
+    background: linear-gradient(135deg, var(--parchment) 0%, #fff8e7 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    border: 4px solid var(--gold);
+    animation: win-appear 0.5s ease;
+}
+
+@keyframes win-appear {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.win-title {
+    font-size: 2rem;
+    color: var(--gold);
+    margin-bottom: 1rem;
+}
+
+.win-subtitle {
+    font-size: 1.25rem;
+    color: var(--ink);
+    margin-bottom: 1rem;
+}
+
+.win-score {
+    font-size: 1.5rem;
+    color: var(--success);
+    margin-bottom: 1.5rem;
+}
+
+.win-btn {
+    padding: 1rem 2rem;
+    font-size: 1.25rem;
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.win-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.win-camera-btn {
+    padding: 0.8rem 1.2rem;
+    font-size: 1.5rem;
+    background: var(--parchment-dark);
+    color: var(--ink);
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.win-camera-btn:hover {
+    background: var(--gold);
+}
+
+/* ==============================================
+   HIGH SCORES SECTION
+   ============================================== */
+
+.high-scores {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    border: 1px solid var(--gold);
+}
+
+.high-scores h3 {
+    color: var(--gold);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.high-scores-list {
+    list-style: none;
+    font-size: 0.9rem;
+    color: var(--ink);
+}
+
+.high-scores-list li {
+    padding: 0.3rem 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.high-scores-list .rank {
+    color: var(--gold);
+    font-weight: bold;
+    width: 1.5rem;
+}
+
+.high-scores-list .name {
+    flex: 1;
+    text-align: left;
+    margin-left: 0.5rem;
+}
+
+.high-scores-list .score {
+    font-weight: bold;
+}
+
+/* ==============================================
+   NAME ENTRY (High Score Input)
+   ============================================== */
+
+.name-entry {
+    margin-top: 1rem;
+    display: none;
+}
+
+.name-entry.active {
+    display: block;
+}
+
+.name-entry label {
+    display: block;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.name-entry input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 2px solid var(--gold);
+    border-radius: 5px;
+    background: var(--parchment);
+    color: var(--ink);
+    width: 150px;
+    text-align: center;
+}
+
+.name-entry button {
+    margin-left: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* ==============================================
+   ACCESSIBILITY - Speaker Button
+   ============================================== */
+
+.speak-btn {
+    background: var(--gold);
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==============================================
+   HINT DISPLAY (Feedback messages)
+   ============================================== */
+
+.hint-display {
+    position: fixed;
+    bottom: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--parchment);
+    color: var(--ink);
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    z-index: 500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    border: 2px solid var(--gold);
+    text-align: center;
+    max-width: 90%;
+}
+
+.hint-display.visible {
+    opacity: 1;
+}
+
+/* ==============================================
+   LEVEL INDICATOR
+   ============================================== */
+
+.level-indicator {
+    text-align: center;
+    color: var(--parchment);
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    margin: 0 auto 0.5rem;
+    max-width: 200px;
+}
+
+/* ==============================================
+   PWA INSTALL PROMPT
+   ============================================== */
+
+.install-prompt {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--parchment);
+    padding: 1rem;
+    text-align: center;
+    z-index: 1000;
+    border-top: 2px solid var(--gold);
+    display: none;
+}
+
+.install-prompt.visible {
+    display: block;
+}
+
+.install-btn {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+.dismiss-btn {
+    background: transparent;
+    border: 2px solid var(--ink);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* ==============================================
+   LOADING SCREEN
+   ============================================== */
+
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--night-deep);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    transition: opacity 0.5s ease;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-title {
+    font-size: 3rem;
+    color: var(--gold);
+    margin-bottom: 1rem;
+}
+
+.loading-text {
+    color: var(--parchment);
+    font-size: 1.2rem;
+}
+
+/* ==============================================
+   START SCREEN
+   ============================================== */
+
+.start-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, var(--night-sky) 0%, var(--night-deep) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    transition: opacity 0.5s ease;
+}
+
+.start-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.start-title {
+    font-size: 4rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 20px var(--gold-glow);
+}
+
+.start-subtitle {
+    font-size: 1.5rem;
+    color: var(--parchment);
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.start-btn {
+    padding: 1.2rem 3rem;
+    font-size: 1.5rem;
+    background: #d4af37;
+    color: #1a1a2e;
+    border: 3px solid #d4af37;
+    border-radius: 15px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(212, 175, 55, 0.5);
+    animation: pulse-start 2s ease-in-out infinite;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.start-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px var(--gold-glow);
+}
+
+@keyframes pulse-start {
+    0%, 100% { box-shadow: 0 5px 20px var(--gold-glow); }
+    50% { box-shadow: 0 5px 35px var(--gold-glow); }
+}
+
+.start-level-info {
+    margin-top: 2rem;
+    color: var(--parchment);
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.start-time-limit {
+    margin-top: 0.5rem;
+    color: var(--gold);
+    font-size: 1rem;
+}
+
+.start-music-btn {
+    margin-top: 2rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    background: transparent;
+    color: var(--parchment);
+    border: 2px solid var(--parchment);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.start-music-btn:hover {
+    opacity: 1;
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.start-music-btn.playing {
+    background: rgba(212, 175, 55, 0.2);
+    border-color: var(--gold);
+    color: var(--gold);
+    opacity: 1;
+}
+
+/* ==============================================
+   ACCESSIBILITY MODES
+   ============================================== */
+
+/* High contrast mode */
+body.high-contrast {
+    --parchment: #ffffff;
+    --parchment-dark: #cccccc;
+    --ink: #000000;
+    --gold: #ffcc00;
+}
+
+/* Color blind mode */
+body.colorblind {
+    --success: #0066cc;
+    --error: #cc6600;
+}
+
+/* ==============================================
+   DATE TOOLTIP
+   ============================================== */
+
+.date-tooltip {
+    position: fixed;
+    background: rgba(15, 15, 26, 0.95);
+    color: var(--gold);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    z-index: 2000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border: 2px solid var(--gold);
+    white-space: nowrap;
+    text-align: center;
+}
+
+.date-tooltip.visible {
+    opacity: 1;
+}
+
+.date-tooltip .tooltip-date {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.date-tooltip .tooltip-note {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--parchment);
+    font-weight: normal;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+/* ==============================================
+   RESPONSIVE - Tablet (768px+)
+   ============================================== */
+
+@media (min-width: 768px) {
+    .card {
+        width: 5.5rem;
+        height: 7rem;
+    }
+    .timeline-slot {
+        width: 6rem;
+        height: 8rem;
+    }
+}
+
+/* ==============================================
+   RESPONSIVE - Mobile (600px and below)
+   ============================================== */
+
+@media (max-width: 600px) {
+    /* Header */
+    .header {
+        padding: 0.5rem;
+    }
+
+    .header h1 {
+        font-size: 1.3rem;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.1rem;
+    }
+
+    .header .subtitle {
+        font-size: 0.75rem;
+    }
+
+    .score-display {
+        gap: 1rem;
+        margin-top: 0.25rem;
+        font-size: 0.85rem;
+    }
+
+    /* Level indicator */
+    .level-indicator {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    /* Navigation buttons */
+    .home-btn {
+        width: 2.2rem;
+        height: 2.2rem;
+        font-size: 0.9rem;
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+
+    .menu-btn {
+        width: 2.2rem;
+        height: 2.2rem;
+        font-size: 1.2rem;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+
+    /* Timeline area */
+    .timeline-area {
+        flex: 0 0 55%;
+        padding: 0.5rem;
+    }
+
+    .timeline {
+        gap: 0.3rem;
+        padding: 0.5rem;
+    }
+
+    .timeline-slot {
+        width: 3.2rem;
+        height: 4.5rem;
+        min-width: 3.2rem;
+        border-width: 2px;
+        border-radius: 8px;
+    }
+
+    .slot-name {
+        font-size: 0.55rem;
+        padding: 0.15rem;
+    }
+
+    .slot-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-bottom: 0.15rem;
+    }
+
+    .connector {
+        width: 0.8rem;
+        height: 2px;
+    }
+
+    /* Card pool area */
+    .card-pool-area {
+        flex: 0 0 45%;
+        padding: 0.4rem;
+    }
+
+    .card-pool-label {
+        font-size: 0.7rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .time-scale {
+        height: 1.5rem;
+        padding: 0 0.5rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .time-marker-label {
+        font-size: 0.5rem;
+    }
+
+    .card-pool {
+        gap: 0.3rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .card {
+        width: 2.8rem;
+        height: 3.8rem;
+        min-width: 2.8rem;
+        border-width: 2px;
+        border-radius: 6px;
+    }
+
+    .card-icon {
+        width: 1.3rem;
+        height: 1.3rem;
+        margin-bottom: 0.1rem;
+    }
+
+    .card-name {
+        font-size: 0.45rem;
+        padding: 0 0.1rem;
+    }
+
+    .card-question-mark {
+        font-size: 1rem;
+    }
+
+    /* Quiz Modal */
+    .quiz-modal {
+        padding: 1rem;
+        border-width: 3px;
+        border-radius: 15px;
+    }
+
+    .quiz-header h2 {
+        font-size: 1.1rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .quiz-description {
+        font-size: 0.95rem;
+        line-height: 1.4;
+        padding: 0.75rem;
+    }
+
+    .quiz-question {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .quiz-options {
+        gap: 0.5rem;
+    }
+
+    .quiz-option {
+        padding: 0.7rem 1rem;
+        font-size: 0.95rem;
+        border-width: 2px;
+        border-radius: 8px;
+        min-height: 2.5rem;
+    }
+
+    .quiz-feedback {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    /* Menu Modal */
+    .menu-modal {
+        padding: 1rem;
+    }
+
+    .menu-modal h2 {
+        font-size: 1.2rem;
+    }
+
+    .menu-option {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    /* Share button */
+    .share-btn {
+        width: 2.2rem;
+        height: 2.2rem;
+        font-size: 1rem;
+        bottom: 0.5rem;
+        left: 0.5rem;
+    }
+
+    /* Music toggle */
+    .music-btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+        bottom: 0.5rem;
+        right: 0.5rem;
+    }
+
+    /* Hint display */
+    .hint-display {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Date tooltip */
+    .date-tooltip {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .date-tooltip .tooltip-note {
+        font-size: 0.55rem;
+    }
+}
+
+/* ==============================================
+   RESPONSIVE - Extra Small (380px and below)
+   ============================================== */
+
+@media (max-width: 380px) {
+    .header h1 {
+        font-size: 1.1rem;
+    }
+
+    .score-display {
+        font-size: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .timeline-slot {
+        width: 2.8rem;
+        height: 4rem;
+        min-width: 2.8rem;
+    }
+
+    .slot-name {
+        font-size: 0.5rem;
+    }
+
+    .slot-icon {
+        width: 1.3rem;
+        height: 1.3rem;
+    }
+
+    .card {
+        width: 2.5rem;
+        height: 3.4rem;
+        min-width: 2.5rem;
+    }
+
+    .card-icon {
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+
+    .card-name {
+        font-size: 0.4rem;
+    }
+
+    .quiz-description {
+        font-size: 0.85rem;
+    }
+
+    .quiz-option {
+        font-size: 0.85rem;
+        padding: 0.6rem 0.8rem;
+    }
+}
+
+/* ==============================================
+   KEYBOARD NAVIGATION FOCUS STYLES (WCAG)
+   ============================================== */
+
+/* Visible focus indicator for keyboard navigation */
+.card:focus,
+.timeline-slot:focus,
+.quiz-option:focus,
+.menu-option:focus,
+.share-option:focus,
+.start-btn:focus,
+.win-btn:focus,
+.menu-btn:focus,
+.home-btn:focus,
+.share-btn:focus,
+.music-btn:focus {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
+
+/* Remove focus outline on mouse click */
+.card:focus:not(:focus-visible),
+.timeline-slot:focus:not(:focus-visible),
+.quiz-option:focus:not(:focus-visible),
+.menu-option:focus:not(:focus-visible),
+.share-option:focus:not(:focus-visible),
+.start-btn:focus:not(:focus-visible),
+.win-btn:focus:not(:focus-visible),
+.menu-btn:focus:not(:focus-visible),
+.home-btn:focus:not(:focus-visible),
+.share-btn:focus:not(:focus-visible),
+.music-btn:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Keyboard focus visible (modern browsers) */
+.card:focus-visible,
+.timeline-slot:focus-visible,
+.quiz-option:focus-visible,
+.menu-option:focus-visible,
+.share-option:focus-visible,
+.start-btn:focus-visible,
+.win-btn:focus-visible,
+.menu-btn:focus-visible,
+.home-btn:focus-visible,
+.share-btn:focus-visible,
+.music-btn:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
