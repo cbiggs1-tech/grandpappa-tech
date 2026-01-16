@@ -2410,19 +2410,14 @@
             gameState.draggedCard = parseInt(card.dataset.index);
             isTouchDragging = false;
 
-            // Show tooltip quickly on touch (before drag starts at 150ms)
+            // Show tooltip immediately on touch
             const personIndex = parseInt(card.dataset.index);
-            const tooltipTimer = setTimeout(() => {
-                if (!isTouchDragging) { // Only show if not already dragging
-                    showDateTooltip(card, personIndex, touch.clientX, touch.clientY);
-                }
-            }, 50); // Show tooltip after 50ms
+            showDateTooltip(card, personIndex, touch.clientX, touch.clientY);
 
-            // Delay clone creation to distinguish tap from drag (starts at 150ms)
+            // Delay clone creation for 1 second to allow tooltip to be read
             card.touchTimeout = setTimeout(() => {
                 isTouchDragging = true;
                 // Hide tooltip when drag actually starts
-                clearTimeout(tooltipTimer);
                 hideDateTooltip();
                 // Create visual clone
                 touchClone = card.cloneNode(true);
@@ -2438,7 +2433,7 @@
                 touchClone.style.top = (touch.clientY - card.offsetHeight/2) + 'px';
                 card.classList.add('dragging');
                 vibrate(50);
-            }, 150);
+            }, 1000); // 1 second delay to allow reading the date tooltip
         }
 
         // Global touch move handler for smooth dragging
@@ -2474,6 +2469,9 @@
                 clearTimeout(touchCard.touchTimeout);
                 touchCard.touchTimeout = null;
             }
+
+            // Hide tooltip when touch ends
+            hideDateTooltip();
 
             // Reset slot highlights
             const slots = document.querySelectorAll('.timeline-slot');
