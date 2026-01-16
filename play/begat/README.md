@@ -89,12 +89,26 @@ npm run lint:fix
 
 ## Accessibility (WCAG 2.1)
 
-- Full keyboard navigation with visible focus indicators
-- ARIA labels on interactive elements
-- High contrast mode
-- Colorblind-friendly mode
-- Reduced motion support
-- Screen reader compatible
+### Screen Reader Support
+All interactive elements include descriptive ARIA labels:
+- **Timeline slots**: Announce position, ancestor name, and date (e.g., "Timeline position 3: Jacob, ~2006–1859 BC")
+- **Empty slots**: Announce "Empty timeline position 5. Drop an ancestor card here."
+- **Unlocked cards**: Announce name and instructions (e.g., "Isaac, unlocked. Press Enter to select and drag to timeline.")
+- **Locked cards**: Announce "Locked ancestor card. Press Enter to answer a quiz and unlock."
+- **Modals**: Proper dialog roles with aria-modal for focus trapping
+
+### Keyboard Navigation
+- **Tab**: Navigate between cards and slots
+- **Arrow keys**: Move between cards in the card pool
+- **Enter/Space**: Select card for dragging, place in focused slot, or open quiz
+- **Escape**: Close modals or return to games menu
+- Visible focus indicators (gold outline) on all interactive elements
+
+### Visual Accessibility
+- High contrast mode (Menu > High Contrast)
+- Colorblind-friendly mode (Menu > Colorblind Mode)
+- Reduced motion support (respects `prefers-reduced-motion`)
+- Large touch targets for mobile users
 
 ## Browser Support
 
