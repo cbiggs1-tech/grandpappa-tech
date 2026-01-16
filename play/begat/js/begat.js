@@ -105,6 +105,7 @@ const genealogy = [
     { name: "Matthan", desc: ["Son of Eleazar (Matt 1:15)", "Grandfather of Joseph"], icon: "father", dates: "~290–260 BC" },
     { name: "Jacob", desc: ["Son of Matthan, father of Joseph (Matt 1:15-16)", "Not the patriarch, later Jacob"], icon: "staff", dates: "~260–230 BC" },
     { name: "Joseph", desc: ["Son of Jacob, husband of Mary (Matt 1:16)", "Righteous man, dreams from angel (Matt 1:18-25, 2:13-23)", "Carpenter in Nazareth (Matt 13:55)"], icon: "carpenter", dates: "~20 BC–AD 20" },
+    { name: "Mary", desc: ["Mother of Jesus, betrothed to Joseph (Matt 1:16)", "Visited by angel Gabriel (Luke 1:26-38)", "Blessed among women (Luke 1:42)"], icon: "star", dates: "~20 BC–AD 50" },
     { name: "Jesus", desc: ["Son of Joseph (legally), the Christ (Matt 1:16-17)", "Born in Bethlehem, fulfilled prophecies (Mic 5:2, Isa 7:14)", "Savior, Emmanuel (Matt 1:21-23)"], icon: "lamb", dates: "~4 BC–AD 30" }
 ];
 
@@ -113,10 +114,10 @@ const genealogy = [
  * Each level covers a portion of the genealogy.
  */
 const levels = [
-    { name: "Patriarchs", start: 0, end: 13, difficulty: "Easy", timeLimit: 180 },      // 3 minutes
-    { name: "Kings of Judah", start: 14, end: 27, difficulty: "Medium", timeLimit: 240 }, // 4 minutes
-    { name: "Post-Exile", start: 28, end: 40, difficulty: "Medium", timeLimit: 300 },   // 5 minutes
-    { name: "Full Lineage", start: 0, end: 40, difficulty: "Hard", timeLimit: 480 }     // 8 minutes
+    { name: "Patriarchs", start: 0, end: 13, difficulty: "Easy", timeLimit: 180 },      // 3 minutes (14 names: Abraham-David)
+    { name: "Kings of Judah", start: 14, end: 27, difficulty: "Medium", timeLimit: 240 }, // 4 minutes (14 names: Solomon-Jeconiah)
+    { name: "Post-Exile", start: 28, end: 41, difficulty: "Medium", timeLimit: 300 },   // 5 minutes (14 names: Shealtiel-Jesus)
+    { name: "Full Lineage", start: 0, end: 41, difficulty: "Hard", timeLimit: 480 }     // 8 minutes (42 names: Abraham-Jesus)
 ];
 
 // ==============================================
