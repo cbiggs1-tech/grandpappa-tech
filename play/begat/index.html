@@ -973,6 +973,33 @@
             font-size: 1rem;
         }
 
+        .start-music-btn {
+            margin-top: 2rem;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            background: transparent;
+            color: var(--parchment);
+            border: 2px solid var(--parchment);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .start-music-btn:hover {
+            opacity: 1;
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .start-music-btn.playing {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: var(--gold);
+            color: var(--gold);
+            opacity: 1;
+        }
+
         /* High contrast mode */
         body.high-contrast {
             --parchment: #ffffff;
@@ -1307,6 +1334,7 @@
         <button class="start-btn" id="startGameBtn">START GAME</button>
         <p class="start-level-info" id="startLevelInfo">Level 1: Patriarchs</p>
         <p class="start-time-limit" id="startTimeLimit">Time Limit: 3:00</p>
+        <button class="start-music-btn" id="startMusicToggle">MUSIC: ON</button>
     </div>
 
     <div class="stars" id="stars"></div>
@@ -2827,6 +2855,7 @@
         const startMusic = document.getElementById('startMusic');
         const gameMusic = document.getElementById('gameMusic');
         const musicBtn = document.getElementById('musicToggle');
+        const startMusicBtn = document.getElementById('startMusicToggle');
         startMusic.volume = 0.4;
         gameMusic.volume = 0.4;
 
@@ -2834,12 +2863,21 @@
         let musicEnabled = true; // Track if user wants music on
 
         function updateMusicButtonState(playing) {
+            // Update gameplay music button
             if (playing) {
                 musicBtn.textContent = 'MUSIC: ON';
                 musicBtn.classList.add('playing');
             } else {
                 musicBtn.textContent = 'MUSIC: OFF';
                 musicBtn.classList.remove('playing');
+            }
+            // Update start screen music button
+            if (playing) {
+                startMusicBtn.textContent = 'MUSIC: ON';
+                startMusicBtn.classList.add('playing');
+            } else {
+                startMusicBtn.textContent = 'MUSIC: OFF';
+                startMusicBtn.classList.remove('playing');
             }
         }
 
@@ -2880,7 +2918,7 @@
 
         // If autoplay was blocked, start music on first user interaction (click or touch)
         function tryStartMusicOnInteraction(e) {
-            if (e.target === musicBtn) return;
+            if (e.target === musicBtn || e.target === startMusicBtn) return;
             if (musicAutoplayBlocked && musicEnabled) {
                 getCurrentMusic().play().then(() => {
                     musicAutoplayBlocked = false;
@@ -2897,6 +2935,22 @@
         document.addEventListener('touchstart', tryStartMusicOnInteraction);
 
         musicBtn.addEventListener('click', () => {
+            const currentMusic = getCurrentMusic();
+            if (currentMusic.paused) {
+                currentMusic.play();
+                updateMusicButtonState(true);
+                musicEnabled = true;
+                musicAutoplayBlocked = false;
+            } else {
+                startMusic.pause();
+                gameMusic.pause();
+                updateMusicButtonState(false);
+                musicEnabled = false;
+            }
+        });
+
+        // Start screen music button handler
+        startMusicBtn.addEventListener('click', () => {
             const currentMusic = getCurrentMusic();
             if (currentMusic.paused) {
                 currentMusic.play();
