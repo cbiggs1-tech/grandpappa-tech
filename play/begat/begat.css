@@ -657,6 +657,8 @@ body {
     padding: 1.5rem;
     max-width: 95%;
     width: 350px;
+    max-height: 90vh;
+    overflow-y: auto;
     border: 4px solid var(--gold);
 }
 
