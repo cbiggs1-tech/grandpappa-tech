@@ -2877,16 +2877,23 @@
             updateMusicButtonState(true);
         });
 
-        // If autoplay was blocked, start music on first user interaction
-        document.addEventListener('click', function startMusicOnInteraction(e) {
+        // If autoplay was blocked, start music on first user interaction (click or touch)
+        function tryStartMusicOnInteraction(e) {
             if (e.target === musicBtn) return;
             if (musicAutoplayBlocked && musicEnabled) {
                 getCurrentMusic().play().then(() => {
                     musicAutoplayBlocked = false;
                     updateMusicButtonState(true);
+                    // Remove listeners once music starts
+                    document.removeEventListener('click', tryStartMusicOnInteraction);
+                    document.removeEventListener('touchstart', tryStartMusicOnInteraction);
+                }).catch(() => {
+                    // Still blocked, keep trying on next interaction
                 });
             }
-        }, { once: true });
+        }
+        document.addEventListener('click', tryStartMusicOnInteraction);
+        document.addEventListener('touchstart', tryStartMusicOnInteraction);
 
         musicBtn.addEventListener('click', () => {
             const currentMusic = getCurrentMusic();
