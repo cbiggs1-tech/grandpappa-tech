@@ -2038,7 +2038,7 @@ document.getElementById('closeShareBtn').addEventListener('click', () => {
 
 if ('serviceWorker' in navigator) {
     const swCode = `
-        const CACHE_NAME = 'begat-v3';
+        const CACHE_NAME = 'begat-v4';
         self.addEventListener('install', e => {
             self.skipWaiting();
             e.waitUntil(caches.open(CACHE_NAME));
