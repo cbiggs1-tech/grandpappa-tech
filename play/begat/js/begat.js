@@ -1792,7 +1792,12 @@ document.getElementById('closeMenuBtn').addEventListener('click', () => {
 });
 
 document.getElementById('howToPlayBtn').addEventListener('click', () => {
-    window.location.href = 'readme.html';
+    document.getElementById('menuModal').classList.remove('active');
+    document.getElementById('instructionsModal').classList.add('active');
+});
+
+document.getElementById('closeInstructionsBtn').addEventListener('click', () => {
+    document.getElementById('instructionsModal').classList.remove('active');
 });
 
 document.getElementById('newGameBtn').addEventListener('click', () => {
@@ -2033,7 +2038,7 @@ document.getElementById('closeShareBtn').addEventListener('click', () => {
 
 if ('serviceWorker' in navigator) {
     const swCode = `
-        const CACHE_NAME = 'begat-v2';
+        const CACHE_NAME = 'begat-v3';
         self.addEventListener('install', e => {
             self.skipWaiting();
             e.waitUntil(caches.open(CACHE_NAME));
@@ -2068,6 +2073,8 @@ document.addEventListener('keydown', (e) => {
             document.getElementById('menuModal').classList.remove('active');
         } else if (document.getElementById('levelModal').classList.contains('active')) {
             document.getElementById('levelModal').classList.remove('active');
+        } else if (document.getElementById('instructionsModal').classList.contains('active')) {
+            document.getElementById('instructionsModal').classList.remove('active');
         } else if (document.getElementById('winModal').classList.contains('active')) {
             document.getElementById('winModal').classList.remove('active');
         } else if (document.getElementById('shareModal').classList.contains('active')) {

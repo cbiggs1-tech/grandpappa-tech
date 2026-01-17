@@ -675,6 +675,26 @@ body {
     gap: 0.75rem;
 }
 
+.instructions-content {
+    text-align: left;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.instructions-content p {
+    margin: 0.75rem 0;
+}
+
+.instructions-content ol,
+.instructions-content ul {
+    margin: 0.5rem 0 0.5rem 1.5rem;
+    padding: 0;
+}
+
+.instructions-content li {
+    margin: 0.4rem 0;
+}
+
 .menu-option {
     padding: 1rem;
     font-size: 1.2rem;
