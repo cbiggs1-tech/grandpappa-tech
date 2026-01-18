@@ -2057,7 +2057,7 @@ document.getElementById('closeShareBtn').addEventListener('click', () => {
 
 if ('serviceWorker' in navigator) {
     const swCode = `
-        const CACHE_NAME = 'begat-v6';
+        const CACHE_NAME = 'begat-v7';
         self.addEventListener('install', e => {
             self.skipWaiting();
             e.waitUntil(caches.open(CACHE_NAME));
@@ -2149,10 +2149,10 @@ window.addEventListener('load', () => {
     }, 1000);
 });
 
-// Hide tooltip on any touch outside of cards (mobile fix)
+// Hide tooltip on any touch outside of cards/slots (mobile fix)
 document.addEventListener('touchstart', (e) => {
-    // Don't hide if touching a card (let the card's touch handler manage tooltip)
-    if (!e.target.closest('.card')) {
+    // Don't hide if touching a card or timeline slot (let their touch handlers manage tooltip)
+    if (!e.target.closest('.card') && !e.target.closest('.timeline-slot')) {
         hideDateTooltip();
     }
 }, { passive: true });
