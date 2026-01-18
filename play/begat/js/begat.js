@@ -2057,7 +2057,7 @@ document.getElementById('closeShareBtn').addEventListener('click', () => {
 
 if ('serviceWorker' in navigator) {
     const swCode = `
-        const CACHE_NAME = 'begat-v5';
+        const CACHE_NAME = 'begat-v6';
         self.addEventListener('install', e => {
             self.skipWaiting();
             e.waitUntil(caches.open(CACHE_NAME));
@@ -2149,9 +2149,12 @@ window.addEventListener('load', () => {
     }, 1000);
 });
 
-// Hide tooltip on any touch (mobile fix)
-document.addEventListener('touchstart', () => {
-    hideDateTooltip();
+// Hide tooltip on any touch outside of cards (mobile fix)
+document.addEventListener('touchstart', (e) => {
+    // Don't hide if touching a card (let the card's touch handler manage tooltip)
+    if (!e.target.closest('.card')) {
+        hideDateTooltip();
+    }
 }, { passive: true });
 
 // Prevent zoom on double tap
