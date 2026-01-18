@@ -612,16 +612,27 @@ function hideDateTooltip() {
 
 /**
  * Handle mouse enter for tooltip display.
+ * Shows tooltip for 1 second on hover.
  * @param {Event} e - Mouse event
  * @param {number} personIndex - Ancestor index
  */
 function handleMouseEnterForTooltip(e, personIndex) {
     const rect = e.currentTarget.getBoundingClientRect();
     showDateTooltip(e.currentTarget, personIndex, rect.left + rect.width / 2, rect.top);
+
+    // Auto-hide tooltip after 1 second
+    if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+    }
+    tooltipTimeout = setTimeout(hideDateTooltip, 1000);
 }
 
 /** Handle mouse leave to hide tooltip */
 function handleMouseLeaveForTooltip() {
+    if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+        tooltipTimeout = null;
+    }
     hideDateTooltip();
 }
 
@@ -1305,12 +1316,20 @@ document.addEventListener('touchmove', (e) => {
 document.addEventListener('touchend', (e) => {
     if (!touchCard) return;
 
+    // Check if this was a quick tap (not a drag)
+    const wasQuickTap = touchCard.touchTimeout !== null;
+
     if (touchCard.touchTimeout) {
         clearTimeout(touchCard.touchTimeout);
         touchCard.touchTimeout = null;
     }
 
-    hideDateTooltip();
+    // If it was a quick tap, keep tooltip visible for 1 second
+    if (wasQuickTap && !isTouchDragging) {
+        setTimeout(hideDateTooltip, 1000);
+    } else {
+        hideDateTooltip();
+    }
 
     const slots = document.querySelectorAll('.timeline-slot');
     slots.forEach(slot => {
@@ -2038,7 +2057,7 @@ document.getElementById('closeShareBtn').addEventListener('click', () => {
 
 if ('serviceWorker' in navigator) {
     const swCode = `
-        const CACHE_NAME = 'begat-v4';
+        const CACHE_NAME = 'begat-v5';
         self.addEventListener('install', e => {
             self.skipWaiting();
             e.waitUntil(caches.open(CACHE_NAME));
