@@ -130,9 +130,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* MOBILE FIXES - Bolder, larger font for visibility */
-      font-size: 1.4rem;
+      /* MOBILE FIXES - Extra bold, larger font for visibility (50% larger) */
+      font-size: 2.1rem;
       font-weight: 900;
+      -webkit-text-stroke: 0.5px currentColor;
       margin: 0 3px;
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(139, 69, 19, 0.1);
@@ -564,11 +565,11 @@
         gap: 10px;
       }
 
-      /* MOBILE FIXES - Responsive card sizing with bold font */
+      /* MOBILE FIXES - Responsive card sizing with extra bold font (50% larger) */
       .card {
-        width: 42px;
-        height: 58px;
-        font-size: 1.2rem;
+        width: 44px;
+        height: 60px;
+        font-size: 1.8rem;
         font-weight: 900;
         margin: 0 2px;
       }
@@ -603,17 +604,17 @@
       }
     }
 
-    /* MOBILE FIXES - Extra small screens with bold font */
+    /* MOBILE FIXES - Extra small screens with extra bold font (50% larger) */
     @media (max-width: 400px) {
       .card {
-        width: 38px;
-        height: 52px;
-        font-size: 1.1rem;
+        width: 40px;
+        height: 54px;
+        font-size: 1.6rem;
         font-weight: 900;
       }
 
       .card.facedown {
-        font-size: 1.1rem;
+        font-size: 1.4rem;
       }
     }
   </style>
