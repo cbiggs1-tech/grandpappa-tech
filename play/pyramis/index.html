@@ -17,24 +17,73 @@
 
     body {
       font-family: 'Papyrus', 'Copperplate', Georgia, serif;
-      background: linear-gradient(180deg,
-        #87CEEB 0%,
-        #F4A460 30%,
-        #DEB887 50%,
-        #D2691E 70%,
-        #8B4513 100%);
+      /* DESERT SUNSET - Soft, painterly, impressionist style */
+      background:
+        /* Parchment overlay for card readability */
+        linear-gradient(180deg,
+          rgba(255, 248, 220, 0.12) 0%,
+          rgba(255, 248, 220, 0.08) 50%,
+          rgba(255, 248, 220, 0.15) 100%),
+        /* Hazy atmosphere layer */
+        radial-gradient(ellipse 120% 80% at 50% 20%,
+          rgba(255, 215, 0, 0.15) 0%,
+          transparent 60%),
+        /* Main sunset gradient - soft and dreamy */
+        linear-gradient(180deg,
+          #483D8B 0%,           /* Deep purple sky top */
+          #6B5B95 8%,           /* Soft lavender */
+          #9370DB 15%,          /* Muted purple */
+          #DDA0DD 22%,          /* Plum pink haze */
+          #FFB6C1 30%,          /* Soft pink */
+          #FFDAB9 38%,          /* Peach */
+          #FFCC99 45%,          /* Soft orange */
+          #FFD700 52%,          /* Golden horizon glow */
+          #F4A460 58%,          /* Sandy orange */
+          #E6C9A8 65%,          /* Light sand */
+          #DEB887 72%,          /* Burly wood */
+          #D4B896 80%,          /* Warm sand */
+          #C9AD8A 88%,          /* Dune shadow */
+          #F4EBD0 100%);        /* Pale sand base */
       min-height: 100vh;
       margin: 0;
       padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* MOBILE FIXES - Prevent text selection */
+      /* MOBILE FIXES - Fixed background, prevent text selection */
+      background-attachment: fixed;
+      background-size: cover;
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
+    }
+
+    /* DESERT SUNSET - Subtle dune silhouette overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 35%;
+      background:
+        /* Distant dune - very soft */
+        radial-gradient(ellipse 200% 100% at 30% 100%,
+          rgba(210, 180, 140, 0.25) 0%,
+          transparent 50%),
+        /* Closer dune curve */
+        radial-gradient(ellipse 180% 80% at 70% 100%,
+          rgba(222, 184, 135, 0.2) 0%,
+          transparent 45%),
+        /* Horizon haze */
+        linear-gradient(180deg,
+          transparent 0%,
+          rgba(255, 215, 0, 0.08) 30%,
+          rgba(244, 235, 208, 0.15) 100%);
+      pointer-events: none;
+      z-index: 0;
     }
 
     h1 {
@@ -43,11 +92,17 @@
       margin: 0 0 15px 0;
       font-size: 2.5rem;
       letter-spacing: 4px;
+      /* DESERT SUNSET - Ensure title above dune overlay */
+      position: relative;
+      z-index: 1;
     }
 
     #game-container {
       max-width: 700px;
       width: 100%;
+      /* DESERT SUNSET - Ensure content above dune overlay */
+      position: relative;
+      z-index: 1;
       /* MOBILE FIXES - Prevent text selection and tap highlight */
       -webkit-user-select: none;
       -moz-user-select: none;
@@ -581,6 +636,13 @@
     @media (max-width: 500px) {
       body {
         padding: 8px;
+        /* DESERT SUNSET - iOS fix for background-attachment: fixed */
+        background-attachment: scroll;
+      }
+
+      /* DESERT SUNSET - Hide dune overlay on small screens for performance */
+      body::before {
+        display: none;
       }
 
       h1 {
