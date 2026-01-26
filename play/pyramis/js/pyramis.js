@@ -1572,24 +1572,54 @@ function initUI() {
 
     const gameContainer = document.getElementById('game-container');
     if (gameContainer) {
-        gameContainer.addEventListener('click', handleGameClick);
+        // MOBILE FIXES - Use a flag to prevent double-firing of click after touch
+        let touchHandled = false;
 
-        // MOBILE FIXES - Proper touch handling for card selection
+        gameContainer.addEventListener('click', (e) => {
+            // MOBILE FIXES - Skip click if touch already handled it
+            if (touchHandled) {
+                touchHandled = false;
+                console.log('[MOBILE] Skipping click - touch already handled');
+                return;
+            }
+            handleGameClick(e);
+        });
+
+        // MOBILE FIXES - Proper touch handling using elementFromPoint
         gameContainer.addEventListener('touchend', (e) => {
-            const cardEl = e.target.closest('.card');
+            // Use changedTouches to get the actual touch point
+            const touch = e.changedTouches[0];
+            if (!touch) return;
+
+            // Find element at touch point (more reliable than e.target)
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const cardEl = element ? element.closest('.card') : null;
+
+            console.log('[MOBILE] touchend at', touch.clientX, touch.clientY, 'element:', element?.className);
+
             if (cardEl) {
-                e.preventDefault(); // Prevent ghost clicks and text selection
-                console.log('[MOBILE] touchend on card');
-                handleGameClick(e); // Process touch as click
+                e.preventDefault(); // Prevent ghost click
+                touchHandled = true; // Flag to skip subsequent click event
+
+                console.log('[MOBILE] Card touched:', cardEl.dataset.index || cardEl.dataset.source);
+
+                // Create a synthetic event-like object for handleGameClick
+                const syntheticEvent = {
+                    target: cardEl,
+                    type: 'touchend'
+                };
+                handleGameClick(syntheticEvent);
+
+                // Reset flag after a short delay
+                setTimeout(() => { touchHandled = false; }, 300);
             }
         }, { passive: false });
 
-        // MOBILE FIXES - Prevent touchstart default on cards to avoid selection
-        gameContainer.addEventListener('touchstart', (e) => {
-            if (e.target.closest('.card')) {
-                e.preventDefault();
-            }
-        }, { passive: false });
+        // MOBILE FIXES - Prevent text selection on touchstart (but don't block touch tracking)
+        gameContainer.addEventListener('touchstart', () => {
+            // Don't preventDefault here - it can break touch tracking
+            // Just let CSS handle text selection prevention
+        }, { passive: true });
     }
 
     const drawBtn = document.getElementById('draw-btn');
