@@ -1510,15 +1510,20 @@ function showFeedback(message, type) {
 }
 
 /**
- * Handles click events on the game container.
- * Uses strict isSourceAvailable check for all clicks.
- * @param {Event} e - Click event
+ * Handles click/touch events on the game container.
+ * // MOBILE FIXES - Uses strict isSourceAvailable check for all clicks/touches.
+ * @param {Event} e - Click or touch event
  */
 function handleGameClick(e) {
     tryResumeBGM();
 
     const cardEl = e.target.closest('.card');
     if (!cardEl) return;
+
+    // MOBILE FIXES - Debug logging for touch events
+    if (e.type === 'touchend') {
+        console.log('[MOBILE] Touch detected on card:', cardEl.dataset.index || cardEl.dataset.source);
+    }
 
     if (cardEl.classList.contains('removed') || cardEl.classList.contains('empty')) {
         return;
@@ -1568,11 +1573,23 @@ function initUI() {
     const gameContainer = document.getElementById('game-container');
     if (gameContainer) {
         gameContainer.addEventListener('click', handleGameClick);
+
+        // MOBILE FIXES - Proper touch handling for card selection
         gameContainer.addEventListener('touchend', (e) => {
+            const cardEl = e.target.closest('.card');
+            if (cardEl) {
+                e.preventDefault(); // Prevent ghost clicks and text selection
+                console.log('[MOBILE] touchend on card');
+                handleGameClick(e); // Process touch as click
+            }
+        }, { passive: false });
+
+        // MOBILE FIXES - Prevent touchstart default on cards to avoid selection
+        gameContainer.addEventListener('touchstart', (e) => {
             if (e.target.closest('.card')) {
                 e.preventDefault();
             }
-        });
+        }, { passive: false });
     }
 
     const drawBtn = document.getElementById('draw-btn');

@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- MOBILE FIXES - Prevent zoom and scaling issues -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Pyramis</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#C41E3A">
@@ -28,6 +29,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      /* MOBILE FIXES - Prevent text selection */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     h1 {
@@ -41,6 +48,12 @@
     #game-container {
       max-width: 700px;
       width: 100%;
+      /* MOBILE FIXES - Prevent text selection and tap highlight */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     /* Score and Controls Bar */
@@ -100,10 +113,14 @@
       display: flex;
       justify-content: center;
       margin-bottom: 5px;
+      /* MOBILE FIXES - Prevent text selection */
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     /* Card Styles - Parchment Theme */
     /* CARD SYMBOL FIX - Standard playing card display */
+    /* MOBILE FIXES - Bolder numbers, touch improvements */
     .card {
       width: 50px;
       height: 70px;
@@ -113,13 +130,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.85rem;
-      font-weight: bold;
+      /* MOBILE FIXES - Bolder, larger font for visibility */
+      font-size: 1.4rem;
+      font-weight: 900;
       margin: 0 3px;
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(139, 69, 19, 0.1);
       transition: transform 0.15s, box-shadow 0.15s;
+      /* MOBILE FIXES - Prevent text selection and improve touch */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
       user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
       position: relative;
       line-height: 1;
     }
@@ -130,14 +155,15 @@
     }
 
     /* CARD SYMBOL FIX - Standard playing card suit colors */
+    /* MOBILE FIXES - Bolder colors and stronger shadows for visibility */
     .card.hearts, .card.diamonds {
-      color: #C41E3A;
-      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+      color: #B01030;
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.9), 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .card.clubs, .card.spades {
       color: #000000;
-      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.9), 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .card.facedown {
@@ -522,6 +548,7 @@
     }
 
     /* Mobile Responsive */
+    /* MOBILE FIXES - Responsive sizing while maintaining bold/visible text */
     @media (max-width: 500px) {
       body {
         padding: 10px;
@@ -537,16 +564,17 @@
         gap: 10px;
       }
 
-      /* CARD SYMBOL FIX - Responsive card sizing */
+      /* MOBILE FIXES - Responsive card sizing with bold font */
       .card {
-        width: 40px;
-        height: 56px;
-        font-size: 0.75rem;
+        width: 42px;
+        height: 58px;
+        font-size: 1.2rem;
+        font-weight: 900;
         margin: 0 2px;
       }
 
       .card.facedown {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
       }
 
       #stock-waste {
@@ -575,16 +603,17 @@
       }
     }
 
-    /* CARD SYMBOL FIX - Extra small screens */
+    /* MOBILE FIXES - Extra small screens with bold font */
     @media (max-width: 400px) {
       .card {
-        width: 36px;
-        height: 50px;
-        font-size: 0.7rem;
+        width: 38px;
+        height: 52px;
+        font-size: 1.1rem;
+        font-weight: 900;
       }
 
       .card.facedown {
-        font-size: 1rem;
+        font-size: 1.1rem;
       }
     }
   </style>
