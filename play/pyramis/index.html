@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pyramis</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#8B4513">
+  <meta name="theme-color" content="#C41E3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -441,6 +441,19 @@
       opacity: 0.5;
     }
 
+    /* PHASE 5: Stats Footer */
+    #stats-display {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: rgba(139, 69, 19, 0.5);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      color: #FFD700;
+      font-size: 0.85rem;
+      text-align: center;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
     /* Win Overlay Modal */
     #win-overlay {
       display: none;
@@ -621,6 +634,9 @@
       <button class="audio-btn" id="bgmToggle" title="Background Music">🎵</button>
     </div>
   </div>
+
+  <!-- PHASE 5: Stats Footer -->
+  <div id="stats-display">W: 0 | L: 0 | Best: 0 | Win Rate: 0%</div>
 
   <div id="feedback"></div>
 

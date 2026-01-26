@@ -1,12 +1,13 @@
 // ==============================================
-// PYRAMIS - Phase 4: Egyptian Theme + Production Polish
+// PYRAMIS - Phase 5: Persistence, Stats, PWA
 // ==============================================
 // A Pyramid Solitaire variant card game with:
-// - Desert/Egyptian theme with hieroglyph suits
+// - Desert/Egyptian theme with standard playing card suits
 // - Scoring system with chain bonuses
 // - Undo feature (5-move stack)
 // - Difficulty modes (Easy/Medium/Hard)
 // - Animations and win overlay
+// - PHASE 5: Game state persistence & stats tracking
 // ==============================================
 
 // ==============================================
@@ -250,6 +251,9 @@ let streakMultiplier = 1;
 const MAX_UNDO_STACK = 5;
 let undoStack = [];
 
+// PHASE 5: Track if game is in progress (for persistence)
+let gameInProgress = false;
+
 /**
  * Creates a snapshot of current game state for undo.
  * @returns {Object} State snapshot
@@ -312,6 +316,8 @@ function performUndo() {
     restoreStateSnapshot(snapshot);
     updateUndoButton();
     updateUI();
+    // PHASE 5: Save after undo
+    saveGameState();
     showFeedback('Move undone', 'info');
     return true;
 }
@@ -357,6 +363,10 @@ function initGame() {
     // Clear undo stack
     undoStack = [];
     updateUndoButton();
+
+    // PHASE 5: Mark game in progress and clear saved state
+    gameInProgress = true;
+    clearSavedGameState();
 }
 
 /**
@@ -373,6 +383,180 @@ function resetGameState() {
     totalChainBonus = 0;
     streakMultiplier = 1;
     undoStack = [];
+}
+
+// ==============================================
+// PHASE 5: GAME STATE PERSISTENCE
+// ==============================================
+
+const SAVE_KEY = 'pyramis-saved-game';
+
+/**
+ * PHASE 5: Saves current game state to localStorage.
+ */
+function saveGameState() {
+    if (!gameInProgress) return;
+    if (isGameWon() || isGameLost()) return;
+
+    const state = {
+        pyramid: pyramid,
+        stock: stock,
+        waste: waste,
+        removedSet: Array.from(removedSet),
+        drawsLeft: drawsLeft,
+        score: score,
+        pairsRemoved: pairsRemoved,
+        chainCount: chainCount,
+        totalChainBonus: totalChainBonus,
+        streakMultiplier: streakMultiplier,
+        difficulty: currentDifficulty,
+        timestamp: Date.now()
+    };
+
+    try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    } catch (e) {
+        console.log('[PHASE 5] Save failed:', e.message);
+    }
+}
+
+/**
+ * PHASE 5: Loads saved game state from localStorage.
+ * @returns {boolean} True if a saved game was restored
+ */
+function loadGameState() {
+    try {
+        const saved = localStorage.getItem(SAVE_KEY);
+        if (!saved) return false;
+
+        const state = JSON.parse(saved);
+
+        // Validate saved state has required fields
+        if (!state.pyramid || !state.stock || state.drawsLeft === undefined) {
+            return false;
+        }
+
+        // Restore state
+        pyramid = state.pyramid;
+        stock = state.stock;
+        waste = state.waste;
+        removedSet = new Set(state.removedSet || []);
+        drawsLeft = state.drawsLeft;
+        score = state.score || 0;
+        pairsRemoved = state.pairsRemoved || 0;
+        chainCount = state.chainCount || 0;
+        totalChainBonus = state.totalChainBonus || 0;
+        streakMultiplier = state.streakMultiplier || 1;
+
+        // Restore difficulty
+        if (state.difficulty && DIFFICULTY_SETTINGS[state.difficulty]) {
+            currentDifficulty = state.difficulty;
+            const select = document.getElementById('difficulty-select');
+            if (select) select.value = currentDifficulty;
+        }
+
+        selectedCard = null;
+        undoStack = [];
+        gameInProgress = true;
+
+        console.log('[PHASE 5] Game restored from save');
+        return true;
+    } catch (e) {
+        console.log('[PHASE 5] Load failed:', e.message);
+        return false;
+    }
+}
+
+/**
+ * PHASE 5: Clears saved game state.
+ */
+function clearSavedGameState() {
+    try {
+        localStorage.removeItem(SAVE_KEY);
+    } catch (e) {
+        console.log('[PHASE 5] Clear save failed:', e.message);
+    }
+}
+
+// ==============================================
+// PHASE 5: STATS TRACKING
+// ==============================================
+
+const STATS_KEY = 'pyramis-stats';
+
+/**
+ * PHASE 5: Gets current stats from localStorage.
+ * @returns {Object} Stats object
+ */
+function getStats() {
+    try {
+        const saved = localStorage.getItem(STATS_KEY);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.log('[PHASE 5] Stats load failed:', e.message);
+    }
+    return {
+        wins: 0,
+        losses: 0,
+        totalGames: 0,
+        bestScore: 0
+    };
+}
+
+/**
+ * PHASE 5: Saves stats to localStorage.
+ * @param {Object} stats - Stats object to save
+ */
+function saveStats(stats) {
+    try {
+        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    } catch (e) {
+        console.log('[PHASE 5] Stats save failed:', e.message);
+    }
+}
+
+/**
+ * PHASE 5: Records a win.
+ */
+function recordWin() {
+    const stats = getStats();
+    stats.wins++;
+    stats.totalGames++;
+    if (score > stats.bestScore) {
+        stats.bestScore = score;
+    }
+    saveStats(stats);
+    updateStatsDisplay();
+    clearSavedGameState();
+    gameInProgress = false;
+}
+
+/**
+ * PHASE 5: Records a loss.
+ */
+function recordLoss() {
+    const stats = getStats();
+    stats.losses++;
+    stats.totalGames++;
+    saveStats(stats);
+    updateStatsDisplay();
+    clearSavedGameState();
+    gameInProgress = false;
+}
+
+/**
+ * PHASE 5: Updates the stats display in the footer.
+ */
+function updateStatsDisplay() {
+    const statsEl = document.getElementById('stats-display');
+    if (!statsEl) return;
+
+    const stats = getStats();
+    const winRate = stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
+
+    statsEl.textContent = `W: ${stats.wins} | L: ${stats.losses} | Best: ${stats.bestScore} | Win Rate: ${winRate}%`;
 }
 
 // ==============================================
@@ -980,6 +1164,9 @@ function renderWaste() {
     wasteDiv.appendChild(cardDiv);
 }
 
+// PHASE 5: Track if we've already recorded end game
+let gameEndRecorded = false;
+
 /**
  * Renders the status bar.
  */
@@ -997,11 +1184,21 @@ function renderStatus() {
         statusDiv.textContent = '𓂀 VICTORY! 𓂀';
         statusDiv.classList.add('win');
         if (drawBtn) drawBtn.disabled = true;
+        // PHASE 5: Record win (only once)
+        if (!gameEndRecorded) {
+            gameEndRecorded = true;
+            recordWin();
+        }
         showWinOverlay();
     } else if (isGameLost()) {
         statusDiv.textContent = 'Game Over - No moves left';
         statusDiv.classList.add('lose');
         if (drawBtn) drawBtn.disabled = true;
+        // PHASE 5: Record loss (only once)
+        if (!gameEndRecorded) {
+            gameEndRecorded = true;
+            recordLoss();
+        }
     } else {
         const sumText = settings.targetSum !== 14 ? ` | Sum: ${settings.targetSum}` : '';
         statusDiv.textContent = `Pyramid: ${remaining}/28 | Draws: ${drawsLeft}/${settings.maxDraws} | Stock: ${stock.length}${sumText}`;
@@ -1021,6 +1218,8 @@ function updateUI() {
     renderStatus();
     updateScoreDisplay();
     updateUndoButton();
+    // PHASE 5: Update stats display
+    updateStatsDisplay();
 }
 
 // ==============================================
@@ -1043,11 +1242,14 @@ function showWinOverlay() {
 
     if (breakdownEl) {
         const settings = getDifficultySettings();
+        const stats = getStats();
         breakdownEl.innerHTML = `
             Pairs Removed: ${pairsRemoved}<br>
             Chain Bonuses: ${totalChainBonus} pts<br>
             Draws Used: ${settings.maxDraws - drawsLeft}/${settings.maxDraws}<br>
-            Difficulty: ${settings.label}
+            Difficulty: ${settings.label}<br>
+            <br>
+            Best Score: ${stats.bestScore}
         `;
     }
 
@@ -1197,6 +1399,9 @@ function attemptPairFromUI(source1, source2) {
             message += ' 🔥';
         }
         showFeedback(message, 'success');
+
+        // PHASE 5: Save game state after successful pair
+        saveGameState();
     }
 
     // Delay UI update slightly to show animation
@@ -1233,6 +1438,9 @@ function handleDraw() {
         updateUI();
         triggerDrawAnimation();
         showFeedback(`Drew ${formatCardUI(waste)}`, 'info');
+
+        // PHASE 5: Save game state after draw
+        saveGameState();
     }
 }
 
@@ -1242,6 +1450,8 @@ function handleDraw() {
 function handleNewGame() {
     tryResumeBGM();
     hideWinOverlay();
+    // PHASE 5: Reset end game flag
+    gameEndRecorded = false;
     initGame();
     showFeedback('New game started!', 'info');
     updateUI();
@@ -1256,6 +1466,9 @@ function handleDifficultyChange() {
 
     currentDifficulty = select.value;
     localStorage.setItem('pyramis-difficulty', currentDifficulty);
+
+    // PHASE 5: Reset end game flag
+    gameEndRecorded = false;
 
     // Start new game with new difficulty
     initGame();
@@ -1342,8 +1555,11 @@ function initUI() {
     // Initialize difficulty first (affects initial game state)
     initDifficultySelector();
 
-    // Initialize game state
-    initGame();
+    // PHASE 5: Try to restore saved game, otherwise start new
+    const restored = loadGameState();
+    if (!restored) {
+        initGame();
+    }
 
     // Initialize audio (BGM + SFX)
     initAudio();
@@ -1380,8 +1596,31 @@ function initUI() {
     }
 
     updateUI();
+
+    // PHASE 5: Register service worker
+    registerServiceWorker();
+
     console.log('[initUI] Pyramis initialized');
     console.log(getCurrentStateSummary());
+}
+
+// ==============================================
+// PHASE 5: SERVICE WORKER REGISTRATION
+// ==============================================
+
+/**
+ * PHASE 5: Registers the service worker for PWA support.
+ */
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => {
+                console.log('[PHASE 5] Service worker registered:', reg.scope);
+            })
+            .catch(err => {
+                console.log('[PHASE 5] Service worker registration failed:', err.message);
+            });
+    }
 }
 
 // Start the game when DOM is ready
