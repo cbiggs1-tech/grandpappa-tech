@@ -81,9 +81,10 @@
     }
 
     #stats-display {
-      color: #DEB887;
-      font-size: 0.75rem;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      color: #FFD700;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
     }
 
     .help-link {
@@ -398,32 +399,41 @@
       border-color: #FFD700;
     }
 
-    /* Buttons */
+    /* Buttons - Uniform size for bottom control row */
     #controls {
       display: flex;
       justify-content: center;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      align-items: stretch;
+      gap: 6px;
+      flex-wrap: nowrap;
     }
 
-    button {
-      padding: 10px 16px;
-      font-size: 0.9rem;
+    /* Base button style for controls row */
+    #controls button,
+    #controls .audio-btn,
+    #controls #difficulty-select {
+      height: 40px;
+      min-width: 50px;
+      padding: 0 10px;
+      font-size: 0.85rem;
       font-weight: bold;
       border: 2px solid #FFD700;
       border-radius: 6px;
       cursor: pointer;
       transition: transform 0.15s, box-shadow 0.15s;
       font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    button:hover {
+    #controls button:hover,
+    #controls .audio-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
-    button:active {
+    #controls button:active {
       transform: translateY(0);
     }
 
@@ -464,31 +474,16 @@
       display: inline-block;
       background: #FFD700;
       color: #8B4513;
-      font-size: 0.65rem;
-      padding: 1px 4px;
-      border-radius: 6px;
-      margin-left: 3px;
+      font-size: 0.6rem;
+      padding: 1px 3px;
+      border-radius: 4px;
+      margin-left: 2px;
     }
 
-    /* Audio Controls - Inline with other controls */
+    /* Audio Controls - Same size as other controls */
     .audio-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
       background: linear-gradient(135deg, #654321 0%, #8B4513 100%);
-      border: 2px solid #FFD700;
-      border-radius: 6px;
-      cursor: pointer;
       font-size: 1rem;
-      transition: background 0.15s, transform 0.15s;
-      padding: 0;
-    }
-
-    .audio-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
     .audio-btn.active {
@@ -497,6 +492,21 @@
 
     .audio-btn.muted {
       opacity: 0.5;
+    }
+
+    /* Difficulty selector styling */
+    #difficulty-container {
+      display: flex;
+      align-items: center;
+    }
+
+    #difficulty-container label {
+      display: none;
+    }
+
+    #difficulty-select {
+      background: #8B4513;
+      color: #FFD700;
     }
 
     /* Win Overlay Modal */
@@ -589,7 +599,7 @@
       }
 
       #stats-display {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
       }
 
       #pyramid {
@@ -632,28 +642,21 @@
         font-size: 0.85rem;
       }
 
-      button {
-        padding: 8px 12px;
-        font-size: 0.8rem;
-      }
-
       #controls {
-        gap: 6px;
+        gap: 4px;
       }
 
-      #difficulty-select {
-        padding: 4px 8px;
+      #controls button,
+      #controls .audio-btn,
+      #controls #difficulty-select {
+        height: 36px;
+        min-width: 44px;
+        padding: 0 8px;
         font-size: 0.75rem;
       }
 
-      #difficulty-container label {
-        display: none;
-      }
-
-      .audio-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 0.9rem;
+      #controls .audio-btn {
+        font-size: 0.85rem;
       }
 
       .win-modal {
@@ -691,15 +694,17 @@
         height: 59px;
       }
 
-      button {
-        padding: 6px 10px;
-        font-size: 0.75rem;
+      #controls button,
+      #controls .audio-btn,
+      #controls #difficulty-select {
+        height: 32px;
+        min-width: 38px;
+        padding: 0 6px;
+        font-size: 0.7rem;
       }
 
-      .audio-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 0.8rem;
+      #controls .audio-btn {
+        font-size: 0.75rem;
       }
     }
   </style>
