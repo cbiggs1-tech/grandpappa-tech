@@ -970,6 +970,7 @@ function initAudio() {
 
 /**
  * Plays a sound effect if enabled.
+ * Also stops BGM when SFX plays - BGM must be manually re-enabled by user.
  * @param {string} name - Sound name: 'draw', 'pair', 'invalid', 'win'
  */
 function playSFX(name) {
@@ -977,6 +978,15 @@ function playSFX(name) {
 
     const sound = sfx[name];
     if (sound) {
+        // Stop BGM when any SFX plays (user must manually re-enable)
+        const bgmWasEnabled = localStorage.getItem('pyramis-bgm-enabled') === 'true';
+        if (bgmWasEnabled && bgm && !bgm.paused) {
+            localStorage.setItem('pyramis-bgm-enabled', 'false');
+            stopBGM();
+            updateAudioButtons();
+            debugLog('[AUDIO] BGM stopped due to SFX play');
+        }
+
         sound.currentTime = 0;
         sound.play().catch(err => {
             debugLog(`[SFX] ${name} play failed:`, err.message);
