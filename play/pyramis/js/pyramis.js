@@ -249,17 +249,17 @@ function getRowForIndex(index) {
 
 const DIFFICULTY_SETTINGS = {
     easy: {
-        maxDraws: 20,
+        maxDraws: 24,
         targetSum: 14,
         label: 'Easy'
     },
     medium: {
-        maxDraws: 15,
+        maxDraws: 18,
         targetSum: 14,
         label: 'Medium'
     },
     hard: {
-        maxDraws: 10,
+        maxDraws: 12,
         targetSum: 15,
         label: 'Hard'
     }
