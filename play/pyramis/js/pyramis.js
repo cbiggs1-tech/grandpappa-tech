@@ -31,6 +31,15 @@ function debugLog(...args) {
 }
 
 // ==============================================
+// GAME CONSTANTS
+// ==============================================
+
+const PYRAMID_SIZE = 28;  // Cards in pyramid (7 rows: 1+2+3+4+5+6+7)
+const STOCK_SIZE = 24;    // Remaining cards in stock (52 - 28)
+const PYRAMID_ROWS = 7;   // Number of rows in pyramid
+const BOTTOM_ROW_START = 21;  // First index of bottom row
+
+// ==============================================
 // CARD CREATION
 // ==============================================
 
@@ -95,8 +104,8 @@ function deal() {
     const deck = createDeck();
     shuffle(deck);
 
-    const pyramid = deck.slice(0, 28);
-    const stock = deck.slice(28);
+    const pyramid = deck.slice(0, PYRAMID_SIZE);
+    const stock = deck.slice(PYRAMID_SIZE);
 
     return { pyramid, stock };
 }
@@ -123,7 +132,7 @@ function deal() {
 function getExposedPositions(removedSet) {
     const exposed = [];
 
-    for (let i = 0; i < 28; i++) {
+    for (let i = 0; i < PYRAMID_SIZE; i++) {
         if (removedSet.has(i)) {
             continue;
         }
@@ -147,13 +156,13 @@ function isExposed(index, removedSet) {
     const left = 2 * index + 1;
     const right = 2 * index + 2;
 
-    const hasLeft = left < 28;
-    const hasRight = right < 28;
+    const hasLeft = left < PYRAMID_SIZE;
+    const hasRight = right < PYRAMID_SIZE;
 
     const leftRemoved = !hasLeft || removedSet.has(left);
     const rightRemoved = !hasRight || removedSet.has(right);
 
-    return (index >= 21) ? true : (leftRemoved && rightRemoved);
+    return (index >= BOTTOM_ROW_START) ? true : (leftRemoved && rightRemoved);
 }
 
 // ==============================================
@@ -494,8 +503,8 @@ function validateSavedState(state) {
         return false;
     }
 
-    // QUALITY BOOST: Validate pyramid has exactly 28 cards
-    if (!Array.isArray(state.pyramid) || state.pyramid.length !== 28) {
+    // QUALITY BOOST: Validate pyramid has exactly PYRAMID_SIZE cards
+    if (!Array.isArray(state.pyramid) || state.pyramid.length !== PYRAMID_SIZE) {
         debugLog('[QUALITY BOOST] Invalid pyramid length:', state.pyramid?.length);
         return false;
     }
@@ -541,7 +550,7 @@ function validateSavedState(state) {
     // QUALITY BOOST: Validate removedSet indices
     if (state.removedSet && Array.isArray(state.removedSet)) {
         for (const idx of state.removedSet) {
-            if (typeof idx !== 'number' || idx < 0 || idx >= 28) {
+            if (typeof idx !== 'number' || idx < 0 || idx >= PYRAMID_SIZE) {
                 return false;
             }
         }
@@ -796,7 +805,7 @@ function getCardFromSource(source) {
         return waste;
     }
     if (typeof source === 'number') {
-        if (removedSet.has(source) || source < 0 || source >= 28) {
+        if (removedSet.has(source) || source < 0 || source >= PYRAMID_SIZE) {
             return null;
         }
         return pyramid[source];
@@ -815,7 +824,7 @@ function isSourceAvailable(source) {
         return waste !== null;
     }
     if (typeof source === 'number') {
-        if (removedSet.has(source) || source < 0 || source >= 28) {
+        if (removedSet.has(source) || source < 0 || source >= PYRAMID_SIZE) {
             return false;
         }
         // QUALITY 9.5+ BOOST: Use cached exposed positions
@@ -899,7 +908,7 @@ function drawIfPossible() {
  * @returns {number} Number of cards still in pyramid
  */
 function getRemainingPyramidCount() {
-    return 28 - removedSet.size;
+    return PYRAMID_SIZE - removedSet.size;
 }
 
 /**
@@ -907,14 +916,14 @@ function getRemainingPyramidCount() {
  * @returns {boolean} True if player won
  */
 function isGameWon() {
-    return removedSet.size === 28;
+    return removedSet.size === PYRAMID_SIZE;
 }
 
 /**
  * QUALITY 9.5+ BOOST: Checks if any valid moves exist with early exit optimization.
  *
  * Performance note: This function has O(n²) worst-case complexity where n = exposed cards.
- * However, with max 28 pyramid cards and typically 7-14 exposed at any time, the actual
+ * However, with max PYRAMID_SIZE (28) cards and typically 7-14 exposed at any time, the actual
  * comparisons rarely exceed 100, which is negligible for modern JavaScript engines.
  * Early exit ensures we stop as soon as a valid pair is found.
  *
@@ -970,7 +979,7 @@ function getCurrentStateSummary() {
         `  Exposed: ${exposedCards || '(none)'}`,
         `  Waste: ${waste ? formatCard(waste) : 'empty'}`,
         `  Draws left: ${drawsLeft}`,
-        `  Pyramid remaining: ${getRemainingPyramidCount()}/28`,
+        `  Pyramid remaining: ${getRemainingPyramidCount()}/${PYRAMID_SIZE}`,
         `  Stock remaining: ${stock.length}`,
         `  Score: ${score}`,
     ];
@@ -1329,7 +1338,7 @@ function renderPyramid() {
     // QUALITY 9.5+ BOOST: Use cached exposed positions
     const exposed = cachedExposedPositions;
 
-    for (let row = 0; row < 7; row++) {
+    for (let row = 0; row < PYRAMID_ROWS; row++) {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'pyramid-row';
         rowDiv.setAttribute('role', 'row');
@@ -1503,7 +1512,7 @@ function renderStatus() {
         }
     } else {
         const sumText = settings.targetSum !== 14 ? ` | Sum: ${settings.targetSum}` : '';
-        statusDiv.textContent = `Pyramid: ${remaining}/28 | Draws: ${drawsLeft}/${settings.maxDraws} | Stock: ${stock.length}${sumText}`;
+        statusDiv.textContent = `Pyramid: ${remaining}/${PYRAMID_SIZE} | Draws: ${drawsLeft}/${settings.maxDraws} | Stock: ${stock.length}${sumText}`;
         if (drawBtn) {
             drawBtn.disabled = drawsLeft <= 0 || stock.length === 0;
         }

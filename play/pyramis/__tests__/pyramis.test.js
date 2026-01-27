@@ -635,7 +635,7 @@ describe('getDifficultySettings', () => {
 
     test('default (medium) settings are correct', () => {
         const settings = getDifficultySettings();
-        expect(settings.maxDraws).toBe(15);
+        expect(settings.maxDraws).toBe(18);
         expect(settings.targetSum).toBe(14);
         expect(settings.label).toBe('Medium');
     });

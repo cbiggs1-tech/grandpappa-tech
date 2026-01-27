@@ -2,13 +2,14 @@
 // PYRAMIS - Service Worker (Phase 5)
 // ==============================================
 
-const CACHE_NAME = 'pyramis-v2';
+const CACHE_NAME = 'pyramis-v3';
 
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
     './js/pyramis.js',
+    './css/styles.css',
     './audio/pyramis.mp3',
     './audio/win.mp3',
     './audio/draw.mp3',
