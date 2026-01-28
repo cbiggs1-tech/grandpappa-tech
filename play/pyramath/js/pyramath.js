@@ -959,7 +959,23 @@ function initEventListeners() {
         });
     }
 
+    // Make the Level display clickable to advance levels (for testing)
+    const levelBox = document.querySelector('.level-box');
+    if (levelBox) {
+        levelBox.style.cursor = 'pointer';
+        levelBox.addEventListener('click', () => {
+            console.log('Level box clicked - advancing level');
+            advanceToNextLevel();
+        });
+    }
+
     document.addEventListener('keydown', (e) => {
+        // Press 'L' to advance level (for testing)
+        if (e.key === 'l' || e.key === 'L') {
+            console.log('L key pressed - advancing level');
+            advanceToNextLevel();
+            return;
+        }
         switch (e.key) {
             case 'ArrowLeft':
                 rotateLeft();
