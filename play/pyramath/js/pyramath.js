@@ -45,7 +45,6 @@ const FACE_ORDER = ['add', 'subtract', 'multiply', 'divide'];
 
 // Stones per row (capstone at top, base at bottom)
 // Fixed at 5 rows: [1, 2, 3, 4, 5] = 15 stones, 7 pairs to solve per face
-// FUTURE: Could add more rows for additional challenge modes
 const ROWS = [1, 2, 3, 4, 5];
 
 // ============================================
@@ -53,19 +52,7 @@ const ROWS = [1, 2, 3, 4, 5];
 // Age-appropriate progression for 4th-6th graders (ages 9-12)
 // ============================================
 
-/**
- * Get number ranges for a given level and operation
- * Ranges apply to BASE ROW (row 4) only - upper rows compute from base
- *
- * Level 1: Very easy (warm-up)
- * Level 2-3: 4th grade fluency
- * Level 4-6: 5th grade speed/challenge
- * Level 7+: 6th grade estimation & mental math mastery
- */
 function getLevelRanges(level, operation) {
-    // Level scaling ranges
-    // Addition/Subtraction scale faster (linear math)
-    // Multiplication/Division scale slower (exponential growth in results)
     const levelScaling = {
         add: [
             { min: 1, max: 10 },      // Level 1: 1-10
@@ -74,7 +61,6 @@ function getLevelRanges(level, operation) {
             { min: 20, max: 100 },    // Level 4: 20-100
             { min: 50, max: 200 },    // Level 5: 50-200
             { min: 75, max: 300 },    // Level 6: 75-300
-            // Level 7+: +50% per level
         ],
         subtract: [
             { min: 5, max: 20 },      // Level 1: 5-20
@@ -83,26 +69,23 @@ function getLevelRanges(level, operation) {
             { min: 40, max: 200 },    // Level 4: 40-200
             { min: 80, max: 400 },    // Level 5: 80-400
             { min: 120, max: 600 },   // Level 6: 120-600
-            // Level 7+: +50% per level
         ],
         multiply: [
-            { min: 1, max: 8 },       // Level 1: 1-8
-            { min: 2, max: 12 },      // Level 2: 2-12
-            { min: 4, max: 15 },      // Level 3: 4-15
-            { min: 5, max: 20 },      // Level 4: 5-20
-            { min: 8, max: 25 },      // Level 5: 8-25
-            { min: 10, max: 30 },     // Level 6: 10-30
-            // Level 7+: +25% per level
+            { min: 2, max: 9 },       // Level 1: 2-9 (basic times tables)
+            { min: 3, max: 12 },      // Level 2: 3-12
+            { min: 4, max: 12 },      // Level 3: 4-12
+            { min: 5, max: 15 },      // Level 4: 5-15
+            { min: 6, max: 15 },      // Level 5: 6-15
+            { min: 7, max: 18 },      // Level 6: 7-18
         ],
         divide: [
-            // divisor × quotient = product shown on stone
-            { minDivisor: 2, maxDivisor: 6, minQuotient: 2, maxQuotient: 8 },    // L1: 4-48
-            { minDivisor: 3, maxDivisor: 9, minQuotient: 3, maxQuotient: 12 },   // L2: 9-108
-            { minDivisor: 4, maxDivisor: 12, minQuotient: 4, maxQuotient: 15 },  // L3: 16-180
-            { minDivisor: 5, maxDivisor: 15, minQuotient: 5, maxQuotient: 20 },  // L4: 25-300
-            { minDivisor: 6, maxDivisor: 20, minQuotient: 6, maxQuotient: 25 },  // L5: 36-500
-            { minDivisor: 8, maxDivisor: 25, minQuotient: 8, maxQuotient: 30 },  // L6: 64-750
-            // Level 7+: +30% per level
+            // For division, we generate factor pairs
+            { minFactor: 2, maxFactor: 6, minQuotient: 2, maxQuotient: 9 },    // L1
+            { minFactor: 2, maxFactor: 9, minQuotient: 2, maxQuotient: 12 },   // L2
+            { minFactor: 3, maxFactor: 10, minQuotient: 3, maxQuotient: 12 },  // L3
+            { minFactor: 4, maxFactor: 12, minQuotient: 4, maxQuotient: 15 },  // L4
+            { minFactor: 5, maxFactor: 15, minQuotient: 5, maxQuotient: 18 },  // L5
+            { minFactor: 6, maxFactor: 18, minQuotient: 6, maxQuotient: 20 },  // L6
         ]
     };
 
@@ -110,25 +93,21 @@ function getLevelRanges(level, operation) {
     const idx = Math.min(level - 1, scales.length - 1);
     let range = { ...scales[idx] };
 
-    // For levels beyond our defined ranges, scale up progressively
+    // For levels beyond defined ranges, scale up progressively
     if (level > scales.length) {
         const extraLevels = level - scales.length;
-
         if (operation === 'add' || operation === 'subtract') {
-            // +50% per level for add/subtract
             const multiplier = Math.pow(1.5, extraLevels);
             range.min = Math.round(range.min * multiplier);
             range.max = Math.round(range.max * multiplier);
         } else if (operation === 'multiply') {
-            // +25% per level for multiply
-            const multiplier = Math.pow(1.25, extraLevels);
+            const multiplier = Math.pow(1.2, extraLevels);
             range.min = Math.round(range.min * multiplier);
             range.max = Math.round(range.max * multiplier);
         } else if (operation === 'divide') {
-            // +30% per level for divide
-            const multiplier = Math.pow(1.3, extraLevels);
-            range.minDivisor = Math.round(range.minDivisor * multiplier);
-            range.maxDivisor = Math.round(range.maxDivisor * multiplier);
+            const multiplier = Math.pow(1.25, extraLevels);
+            range.minFactor = Math.round(range.minFactor * multiplier);
+            range.maxFactor = Math.round(range.maxFactor * multiplier);
             range.minQuotient = Math.round(range.minQuotient * multiplier);
             range.maxQuotient = Math.round(range.maxQuotient * multiplier);
         }
@@ -140,7 +119,7 @@ function getLevelRanges(level, operation) {
 // ============================================
 // Game State
 // ============================================
-let currentLevel = 1;  // Difficulty level (1-10+)
+let currentLevel = 1;
 let currentFaceIndex = 0;
 let score = 0;
 let streak = 0;
@@ -152,36 +131,13 @@ let musicEnabled = true;
 let completedFaces = new Set();
 
 // ============================================
-// DOM Elements
+// DOM Elements (initialized after DOM ready)
 // ============================================
-const pyramid = document.getElementById('pyramid');
-const levelValue = document.getElementById('level-value');
-const scoreValue = document.getElementById('score-value');
-const timerValue = document.getElementById('timer-value');
-const streakValue = document.getElementById('streak-value');
-const operationSymbol = document.getElementById('operation-symbol');
-const operationName = document.getElementById('operation-name');
-const feedback = document.getElementById('feedback');
-const status = document.getElementById('status');
-
-const newGameBtn = document.getElementById('new-game-btn');
-const rotateLeftBtn = document.getElementById('rotate-left-btn');
-const rotateRightBtn = document.getElementById('rotate-right-btn');
-const soundToggleBtn = document.getElementById('sound-toggle-btn');
-const musicToggleBtn = document.getElementById('music-toggle-btn');
-
-const levelCompleteModal = document.getElementById('level-complete-modal');
-const pyramidCompleteModal = document.getElementById('pyramid-complete-modal');
-const levelContinueBtn = document.getElementById('level-continue-btn');
-const playAgainBtn = document.getElementById('play-again-btn');
-const nextLevelBtn = document.getElementById('next-level-btn');
-
-const faces = {
-    add: document.querySelector('.face-front'),
-    subtract: document.querySelector('.face-right'),
-    multiply: document.querySelector('.face-back'),
-    divide: document.querySelector('.face-left')
-};
+let pyramid, levelValue, scoreValue, timerValue, streakValue;
+let operationSymbol, operationName, feedback, statusDisplay;
+let newGameBtn, rotateLeftBtn, rotateRightBtn, soundToggleBtn, musicToggleBtn;
+let levelCompleteModal, pyramidCompleteModal, levelContinueBtn, playAgainBtn, nextLevelBtn;
+let faces;
 
 // ============================================
 // Utility Functions
@@ -202,8 +158,8 @@ function shuffleArray(array) {
 
 // ============================================
 // Number Generation
-// Generates values for all stones on a face
-// Uses currentLevel to scale difficulty
+// Each operation generates numbers differently to ensure
+// sensible, achievable targets
 // ============================================
 
 function generateNumbersForFace(operation, level = currentLevel) {
@@ -221,116 +177,145 @@ function generateNumbersForFace(operation, level = currentLevel) {
     }
 }
 
+/**
+ * Addition: Generate numbers where sums make sense
+ * All stones are smaller than possible targets
+ */
 function generateAdditionNumbers(level) {
     const range = getLevelRanges(level, 'add');
     const grid = [];
 
-    // Generate base row (row 4) with level-appropriate numbers
-    grid[4] = [];
-    for (let i = 0; i < 5; i++) {
-        grid[4][i] = randomInt(range.min, range.max);
+    // Generate ALL 14 non-capstone stones as base numbers
+    // This ensures we have full control over the values
+    const allNumbers = [];
+    for (let i = 0; i < 14; i++) {
+        allNumbers.push(randomInt(range.min, range.max));
     }
+    shuffleArray(allNumbers);
 
-    // Build upward - upper rows computed from pairs below
-    // This naturally scales the capstone target with level
-    for (let row = 3; row >= 0; row--) {
+    // Distribute to pyramid (rows 1-4, total 14 stones)
+    let idx = 0;
+    for (let row = 1; row <= 4; row++) {
         grid[row] = [];
         for (let col = 0; col <= row; col++) {
-            grid[row][col] = grid[row + 1][col] + grid[row + 1][col + 1];
+            grid[row][col] = allNumbers[idx++];
         }
     }
+
+    // Capstone (row 0) - placeholder, will be set by setInitialTarget
+    grid[0] = [0];
 
     return grid;
 }
 
+/**
+ * Subtraction: Generate numbers where differences are achievable
+ */
 function generateSubtractionNumbers(level) {
     const range = getLevelRanges(level, 'subtract');
     const grid = [];
 
-    // Generate base row with level-appropriate numbers
-    grid[4] = [];
-    for (let i = 0; i < 5; i++) {
-        grid[4][i] = randomInt(range.min, range.max);
+    // Generate varied numbers for subtraction
+    const allNumbers = [];
+    for (let i = 0; i < 14; i++) {
+        allNumbers.push(randomInt(range.min, range.max));
     }
+    shuffleArray(allNumbers);
 
-    // Build upward using absolute difference (always non-negative)
-    for (let row = 3; row >= 0; row--) {
+    let idx = 0;
+    for (let row = 1; row <= 4; row++) {
         grid[row] = [];
         for (let col = 0; col <= row; col++) {
-            grid[row][col] = Math.abs(grid[row + 1][col] - grid[row + 1][col + 1]);
+            grid[row][col] = allNumbers[idx++];
         }
     }
 
+    grid[0] = [0];
     return grid;
 }
 
+/**
+ * Multiplication: Use smaller base numbers to avoid huge products
+ */
 function generateMultiplicationNumbers(level) {
     const range = getLevelRanges(level, 'multiply');
     const grid = [];
 
-    // Generate base row with level-appropriate numbers
-    grid[4] = [];
-    for (let i = 0; i < 5; i++) {
-        grid[4][i] = randomInt(range.min, range.max);
+    // Keep multiplication numbers small to avoid overflow
+    const allNumbers = [];
+    for (let i = 0; i < 14; i++) {
+        allNumbers.push(randomInt(range.min, range.max));
     }
+    shuffleArray(allNumbers);
 
-    // Build upward using multiplication
-    for (let row = 3; row >= 0; row--) {
+    let idx = 0;
+    for (let row = 1; row <= 4; row++) {
         grid[row] = [];
         for (let col = 0; col <= row; col++) {
-            grid[row][col] = grid[row + 1][col] * grid[row + 1][col + 1];
+            grid[row][col] = allNumbers[idx++];
         }
     }
 
+    grid[0] = [0];
     return grid;
 }
 
+/**
+ * Division: Generate numbers that divide cleanly with VARIED quotients
+ * Key insight: Create factor pairs (dividend, divisor) where dividend = divisor × quotient
+ */
 function generateDivisionNumbers(level) {
     const range = getLevelRanges(level, 'divide');
     const grid = [];
 
-    // Generate base row as products of divisor × quotient
-    // This ensures clean integer division is always possible
-    grid[4] = [];
-    for (let i = 0; i < 5; i++) {
-        const divisor = randomInt(range.minDivisor, range.maxDivisor);
-        const quotient = randomInt(range.minQuotient, range.maxQuotient);
-        grid[4][i] = divisor * quotient; // Always clean, never 0
+    // Generate diverse numbers that can form clean division pairs
+    // Strategy: Create numbers that are products of small factors
+    const allNumbers = [];
+    const usedNumbers = new Set();
+
+    // Generate varied products to ensure diverse quotients
+    for (let i = 0; i < 14; i++) {
+        let num;
+        let attempts = 0;
+        do {
+            // Create a product of two factors to ensure clean division
+            const factor1 = randomInt(range.minFactor, range.maxFactor);
+            const factor2 = randomInt(range.minQuotient, range.maxQuotient);
+            num = factor1 * factor2;
+            attempts++;
+        } while (usedNumbers.has(num) && attempts < 20);
+
+        usedNumbers.add(num);
+        allNumbers.push(num);
     }
 
-    // Build upward using division (larger / smaller)
-    for (let row = 3; row >= 0; row--) {
+    shuffleArray(allNumbers);
+
+    let idx = 0;
+    for (let row = 1; row <= 4; row++) {
         grid[row] = [];
         for (let col = 0; col <= row; col++) {
-            const a = grid[row + 1][col];
-            const b = grid[row + 1][col + 1];
-            const dividend = Math.max(a, b);
-            const divisor = Math.max(1, Math.min(a, b));
-            grid[row][col] = Math.floor(dividend / divisor);
-            // Ensure no zeros (minimum 1)
-            if (grid[row][col] === 0) grid[row][col] = 1;
+            grid[row][col] = allNumbers[idx++];
         }
     }
 
+    grid[0] = [0];
     return grid;
 }
 
 // ============================================
 // Face Population
-// Creates DOM stones and sets initial target
 // ============================================
 
 function populateFace(faceElement, operation) {
     faceElement.innerHTML = '';
 
-    // Re-add the pyramid background for this face
     const faceBg = document.createElement('div');
     faceBg.className = 'face-bg';
     faceElement.appendChild(faceBg);
 
     const grid = generateNumbersForFace(operation, currentLevel);
 
-    // Create all rows and stones
     ROWS.forEach((stoneCount, rowIndex) => {
         const row = document.createElement('div');
         row.className = 'stone-row';
@@ -348,6 +333,14 @@ function populateFace(faceElement, operation) {
             // Capstone (row 0) is the target display
             if (rowIndex === 0) {
                 stone.classList.add('target');
+            } else {
+                // Dynamic font sizing for large numbers
+                const numStr = String(grid[rowIndex][col]);
+                if (numStr.length >= 5) {
+                    stone.classList.add('tiny-text');
+                } else if (numStr.length >= 4) {
+                    stone.classList.add('small-text');
+                }
             }
 
             stone.addEventListener('click', () => handleStoneClick(stone));
@@ -363,16 +356,42 @@ function populateFace(faceElement, operation) {
 
 /**
  * Set the initial capstone target based on possible pairs
+ * For addition: pick targets that are >= max stone value (makes intuitive sense)
  */
 function setInitialTarget(faceElement, operation) {
     const possibleTargets = getAllPossibleResults(faceElement, operation);
+    const unsolvedStones = faceElement.querySelectorAll('.stone:not(.target)');
 
     if (possibleTargets.length > 0) {
-        // Pick a random target from possible results
-        const target = possibleTargets[randomInt(0, possibleTargets.length - 1)];
+        let validTargets = possibleTargets;
+
+        // For addition, filter to targets >= max stone value
+        // This prevents confusing scenarios like "target is 5 but there's a 12 on the board"
+        if (operation === 'add') {
+            const maxStone = Math.max(...Array.from(unsolvedStones).map(s => parseInt(s.dataset.value)));
+            validTargets = possibleTargets.filter(t => t >= maxStone);
+            if (validTargets.length === 0) validTargets = possibleTargets; // fallback
+        }
+
+        // For division, prefer targets > 1 to avoid trivial answers
+        if (operation === 'divide') {
+            const nonTrivial = possibleTargets.filter(t => t > 1);
+            if (nonTrivial.length > 0) validTargets = nonTrivial;
+        }
+
+        const target = validTargets[randomInt(0, validTargets.length - 1)];
         const capstone = faceElement.querySelector('.stone-row[data-row="0"] .stone');
         capstone.dataset.value = target;
         capstone.textContent = target;
+
+        // Dynamic font sizing for capstone too
+        const numStr = String(target);
+        capstone.classList.remove('tiny-text', 'small-text');
+        if (numStr.length >= 5) {
+            capstone.classList.add('tiny-text');
+        } else if (numStr.length >= 4) {
+            capstone.classList.add('small-text');
+        }
     }
 }
 
@@ -384,23 +403,21 @@ function getAllPossibleResults(faceElement, operation) {
     const results = new Set();
     const opFn = OPERATIONS[operation].fn;
 
-    // Check all possible pairs
     const stones = Array.from(unsolvedStones);
     for (let i = 0; i < stones.length; i++) {
         for (let j = i + 1; j < stones.length; j++) {
             const a = parseInt(stones[i].dataset.value);
             const b = parseInt(stones[j].dataset.value);
-            const result = opFn(a, b);
 
-            // For division, only include integer results
+            // For division, only include clean integer results
             if (operation === 'divide') {
                 const dividend = Math.max(a, b);
                 const divisor = Math.max(1, Math.min(a, b));
-                if (dividend % divisor === 0) {
-                    results.add(result);
+                if (divisor > 0 && dividend % divisor === 0) {
+                    results.add(Math.floor(dividend / divisor));
                 }
             } else {
-                results.add(result);
+                results.add(opFn(a, b));
             }
         }
     }
@@ -453,7 +470,7 @@ function initPyramid(keepScore = false) {
     updateOperationDisplay();
     clearFeedback();
 
-    // Populate all faces with numbers (using currentLevel)
+    // Populate all faces with numbers
     Object.keys(faces).forEach(operation => {
         populateFace(faces[operation], operation);
     });
@@ -465,9 +482,6 @@ function initPyramid(keepScore = false) {
     setStatus(`Level ${currentLevel} (${levelName}) - Find two stones that equal the target!`);
 }
 
-/**
- * Get a friendly name for the current level
- */
 function getLevelName(level) {
     if (level === 1) return 'Warm-up';
     if (level <= 3) return '4th Grade';
@@ -476,66 +490,51 @@ function getLevelName(level) {
     return 'Math Master';
 }
 
-/**
- * Start a completely new game at level 1
- */
 function startNewGame() {
     currentLevel = 1;
     initPyramid(false);
 }
 
-/**
- * Advance to the next level (keep score)
- */
 function advanceToNextLevel() {
     currentLevel++;
-    // Add level-up bonus
     const levelBonus = 100 * currentLevel;
     score += levelBonus;
     initPyramid(true);
 
-    // Show level up feedback
     setFeedback(`Level Up! Welcome to Level ${currentLevel}! (+${levelBonus} bonus)`, false);
 
-    // Animate the level display
-    levelValue.classList.add('level-up-animation');
-    setTimeout(() => levelValue.classList.remove('level-up-animation'), 1000);
+    if (levelValue) {
+        levelValue.classList.add('level-up-animation');
+        setTimeout(() => levelValue.classList.remove('level-up-animation'), 1000);
+    }
 }
 
 // ============================================
 // Stone Selection & Pair Checking
 // ============================================
 
-/**
- * Handle stone click - no row restriction, any two unsolved stones
- */
 function handleStoneClick(stone) {
     const operation = stone.dataset.operation;
     const currentOperation = FACE_ORDER[currentFaceIndex];
 
-    // Ignore clicks on wrong face
     if (operation !== currentOperation) return;
 
-    // Ignore clicks on solved stones
     if (stone.classList.contains('solved')) {
         setFeedback('That stone is already used!', true);
         return;
     }
 
-    // Ignore clicks on the target capstone
     if (stone.classList.contains('target')) {
         const val = stone.dataset.value;
         setFeedback(`Target: ${val} — Find two stones that make this!`, false);
         return;
     }
 
-    // Toggle selection
     if (stone.classList.contains('selected')) {
         stone.classList.remove('selected');
         selectedStones = selectedStones.filter(s => s !== stone);
         clearFeedback();
     } else {
-        // Auto-deselect oldest if already have 2
         if (selectedStones.length >= 2) {
             const oldest = selectedStones.shift();
             oldest.classList.remove('selected');
@@ -553,9 +552,6 @@ function handleStoneClick(stone) {
     }
 }
 
-/**
- * Check if the two selected stones produce the target
- */
 function checkSelectedPair() {
     const [stoneA, stoneB] = selectedStones;
     const valA = parseInt(stoneA.dataset.value);
@@ -564,11 +560,9 @@ function checkSelectedPair() {
     const opData = OPERATIONS[operation];
     const faceElement = faces[operation];
 
-    // Get current target
     const capstone = faceElement.querySelector('.stone-row[data-row="0"] .stone');
     const target = parseInt(capstone.dataset.value);
 
-    // Calculate result
     const result = opData.fn(valA, valB);
 
     // For division, check if it's clean
@@ -585,25 +579,17 @@ function checkSelectedPair() {
         }
     }
 
-    // Check if result matches target
     if (result === target) {
-        // SUCCESS!
         handleCorrectPair(stoneA, stoneB, valA, valB, result, operation, opData);
     } else {
-        // Wrong pair
         handleWrongPair(valA, valB, result, target, opData);
     }
 }
 
-/**
- * Handle a correct pair match
- */
 function handleCorrectPair(stoneA, stoneB, valA, valB, result, operation, opData) {
-    // Mark both stones as solved
     solveStone(stoneA);
     solveStone(stoneB);
 
-    // Calculate points: (base 10 + streak bonus) × level multiplier
     const basePoints = 10 + (streak * 5);
     const points = basePoints * currentLevel;
     score += points;
@@ -612,7 +598,6 @@ function handleCorrectPair(stoneA, stoneB, valA, valB, result, operation, opData
     updateScoreDisplay();
     updateStreakDisplay();
 
-    // Show success feedback with level multiplier
     if (currentLevel > 1) {
         setFeedback(`✓ ${valA} ${opData.symbol} ${valB} = ${result}! (+${points} = ${basePoints}×L${currentLevel})`, false);
     } else {
@@ -621,14 +606,9 @@ function handleCorrectPair(stoneA, stoneB, valA, valB, result, operation, opData
     playSound('correct');
 
     clearSelection();
-
-    // Update to new target or complete face
     updateCapstoneToNewTarget(operation);
 }
 
-/**
- * Handle a wrong pair attempt
- */
 function handleWrongPair(valA, valB, result, target, opData) {
     streak = 0;
     updateStreakDisplay();
@@ -640,27 +620,44 @@ function handleWrongPair(valA, valB, result, target, opData) {
     clearSelection();
 }
 
-/**
- * Update the capstone to a new target from remaining pairs
- * If no pairs left, face is complete
- */
 function updateCapstoneToNewTarget(operation) {
     const faceElement = faces[operation];
     const possibleTargets = getAllPossibleResults(faceElement, operation);
     const capstone = faceElement.querySelector('.stone-row[data-row="0"] .stone');
 
     if (possibleTargets.length === 0) {
-        // No more pairs possible - face complete!
         capstone.classList.add('solved');
         capstone.textContent = '✓';
         handleFaceComplete(operation);
     } else {
-        // Pick a new random target
-        const newTarget = possibleTargets[randomInt(0, possibleTargets.length - 1)];
+        // For division, prefer non-trivial targets
+        let validTargets = possibleTargets;
+        if (operation === 'divide') {
+            const nonTrivial = possibleTargets.filter(t => t > 1);
+            if (nonTrivial.length > 0) validTargets = nonTrivial;
+        }
+
+        // For addition, prefer larger targets
+        if (operation === 'add') {
+            const unsolvedStones = faceElement.querySelectorAll('.stone:not(.solved):not(.target)');
+            const maxStone = Math.max(...Array.from(unsolvedStones).map(s => parseInt(s.dataset.value)));
+            const sensibleTargets = possibleTargets.filter(t => t >= maxStone);
+            if (sensibleTargets.length > 0) validTargets = sensibleTargets;
+        }
+
+        const newTarget = validTargets[randomInt(0, validTargets.length - 1)];
         capstone.dataset.value = newTarget;
         capstone.textContent = newTarget;
 
-        // Brief highlight to show target changed
+        // Dynamic font sizing
+        const numStr = String(newTarget);
+        capstone.classList.remove('tiny-text', 'small-text');
+        if (numStr.length >= 5) {
+            capstone.classList.add('tiny-text');
+        } else if (numStr.length >= 4) {
+            capstone.classList.add('small-text');
+        }
+
         capstone.classList.add('target-changed');
         setTimeout(() => capstone.classList.remove('target-changed'), 500);
 
@@ -668,9 +665,6 @@ function updateCapstoneToNewTarget(operation) {
     }
 }
 
-/**
- * Mark a stone as solved
- */
 function solveStone(stone) {
     stone.classList.remove('selected');
     stone.classList.add('solved');
@@ -678,9 +672,6 @@ function solveStone(stone) {
     setTimeout(() => stone.classList.remove('just-solved'), 600);
 }
 
-/**
- * Shake stones for wrong answer feedback
- */
 function shakeStones(stones) {
     stones.forEach(stone => {
         stone.classList.add('shake');
@@ -688,9 +679,6 @@ function shakeStones(stones) {
     });
 }
 
-/**
- * Clear selection state
- */
 function clearSelection() {
     selectedStones.forEach(stone => stone.classList.remove('selected'));
     selectedStones = [];
@@ -703,13 +691,11 @@ function clearSelection() {
 function handleFaceComplete(operation) {
     completedFaces.add(operation);
 
-    // Bonus points for completing a face (scaled by level)
     const faceBonus = 50 * currentLevel;
     score += faceBonus;
     updateScoreDisplay();
 
     if (completedFaces.size === 4) {
-        // All faces complete - pyramid complete!
         stopTimer();
         playSound('pyramidComplete');
         setTimeout(() => showPyramidCompleteModal(), 800);
@@ -726,12 +712,10 @@ function handleFaceComplete(operation) {
 function rotatePyramidTo(faceIndex) {
     currentFaceIndex = ((faceIndex % 4) + 4) % 4;
 
-    // Remove active class from all faces
     Object.values(faces).forEach(face => {
         face.classList.remove('active');
     });
 
-    // Add active class to current face
     const operation = FACE_ORDER[currentFaceIndex];
     faces[operation].classList.add('active');
 
@@ -762,46 +746,49 @@ function rotateRight() {
 // ============================================
 
 function updateLevelDisplay() {
-    levelValue.textContent = currentLevel;
+    if (levelValue) levelValue.textContent = currentLevel;
 }
 
 function updateScoreDisplay() {
-    scoreValue.textContent = score;
+    if (scoreValue) scoreValue.textContent = score;
 }
 
 function updateStreakDisplay() {
-    streakValue.textContent = streak;
+    if (streakValue) streakValue.textContent = streak;
 }
 
 function updateTimerDisplay() {
-    const minutes = Math.floor(elapsedSeconds / 60);
-    const seconds = elapsedSeconds % 60;
-    timerValue.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    if (timerValue) {
+        const minutes = Math.floor(elapsedSeconds / 60);
+        const seconds = elapsedSeconds % 60;
+        timerValue.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
 }
 
 function updateOperationDisplay() {
     const operation = FACE_ORDER[currentFaceIndex];
     const opData = OPERATIONS[operation];
-    operationSymbol.textContent = opData.symbol;
-    operationName.textContent = opData.name;
+    if (operationSymbol) operationSymbol.textContent = opData.symbol;
+    if (operationName) operationName.textContent = opData.name;
 }
 
 function setFeedback(message, isError = false) {
-    feedback.textContent = message;
-    feedback.style.color = isError ? '#C44' : '#3D2914';
+    if (feedback) {
+        feedback.textContent = message;
+        feedback.style.color = isError ? '#C44' : '#3D2914';
+    }
 }
 
 function clearFeedback() {
-    feedback.textContent = '';
+    if (feedback) feedback.textContent = '';
 }
 
 function setStatus(message) {
-    status.textContent = message;
+    if (statusDisplay) statusDisplay.textContent = message;
 }
 
 // ============================================
 // Timer Functions
-// FUTURE: Could add time bonuses or time attack modes here
 // ============================================
 
 function startTimer() {
@@ -827,111 +814,159 @@ function stopTimer() {
 
 function showLevelCompleteModal(operation) {
     const faceBonus = 50 * currentLevel;
-    document.getElementById('completed-operation').textContent = OPERATIONS[operation].name;
-    document.getElementById('level-bonus').textContent = `+${faceBonus}`;
-    levelCompleteModal.classList.add('active');
+    const completedOp = document.getElementById('completed-operation');
+    const bonusEl = document.getElementById('level-bonus');
+    if (completedOp) completedOp.textContent = OPERATIONS[operation].name;
+    if (bonusEl) bonusEl.textContent = `+${faceBonus}`;
+    if (levelCompleteModal) levelCompleteModal.classList.add('active');
 }
 
 function hideLevelCompleteModal() {
-    levelCompleteModal.classList.remove('active');
+    if (levelCompleteModal) levelCompleteModal.classList.remove('active');
 }
 
 function showPyramidCompleteModal() {
-    document.getElementById('final-score').textContent = score;
-    document.getElementById('final-time').textContent = timerValue.textContent;
-
-    // Update level-up message
+    const finalScoreEl = document.getElementById('final-score');
+    const finalTimeEl = document.getElementById('final-time');
     const levelUpMsg = document.getElementById('level-up-message');
+
+    if (finalScoreEl) finalScoreEl.textContent = score;
+    if (finalTimeEl && timerValue) finalTimeEl.textContent = timerValue.textContent;
+
     if (levelUpMsg) {
         const nextLevel = currentLevel + 1;
         const nextLevelName = getLevelName(nextLevel);
         levelUpMsg.textContent = `Level Up! Ready for Level ${nextLevel} (${nextLevelName})?`;
     }
 
-    pyramidCompleteModal.classList.add('active');
+    if (pyramidCompleteModal) pyramidCompleteModal.classList.add('active');
 }
 
 function hidePyramidCompleteModal() {
-    pyramidCompleteModal.classList.remove('active');
+    if (pyramidCompleteModal) pyramidCompleteModal.classList.remove('active');
 }
 
 // ============================================
 // Sound Functions (Placeholders)
-// FUTURE: Add actual sound effects here
 // ============================================
 
 function toggleSound() {
     soundEnabled = !soundEnabled;
-    soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔇';
-    soundToggleBtn.classList.toggle('muted', !soundEnabled);
+    if (soundToggleBtn) {
+        soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔇';
+        soundToggleBtn.classList.toggle('muted', !soundEnabled);
+    }
 }
 
 function toggleMusic() {
     musicEnabled = !musicEnabled;
-    musicToggleBtn.textContent = musicEnabled ? '🎵' : '🎵';
-    musicToggleBtn.classList.toggle('muted', !musicEnabled);
+    if (musicToggleBtn) {
+        musicToggleBtn.textContent = musicEnabled ? '🎵' : '🎵';
+        musicToggleBtn.classList.toggle('muted', !musicEnabled);
+    }
 }
 
 function playSound(soundName) {
     if (!soundEnabled) return;
-    // FUTURE: Implement actual sound playback
     console.log('Play sound:', soundName);
 }
 
 // ============================================
-// Event Listeners
+// Initialize DOM Elements and Event Listeners
 // ============================================
 
-newGameBtn.addEventListener('click', () => {
-    hideLevelCompleteModal();
-    hidePyramidCompleteModal();
-    startNewGame();
-});
+function initDOMElements() {
+    pyramid = document.getElementById('pyramid');
+    levelValue = document.getElementById('level-value');
+    scoreValue = document.getElementById('score-value');
+    timerValue = document.getElementById('timer-value');
+    streakValue = document.getElementById('streak-value');
+    operationSymbol = document.getElementById('operation-symbol');
+    operationName = document.getElementById('operation-name');
+    feedback = document.getElementById('feedback');
+    statusDisplay = document.getElementById('status');
 
-rotateLeftBtn.addEventListener('click', rotateLeft);
-rotateRightBtn.addEventListener('click', rotateRight);
+    newGameBtn = document.getElementById('new-game-btn');
+    rotateLeftBtn = document.getElementById('rotate-left-btn');
+    rotateRightBtn = document.getElementById('rotate-right-btn');
+    soundToggleBtn = document.getElementById('sound-toggle-btn');
+    musicToggleBtn = document.getElementById('music-toggle-btn');
 
-soundToggleBtn.addEventListener('click', toggleSound);
-musicToggleBtn.addEventListener('click', toggleMusic);
+    levelCompleteModal = document.getElementById('level-complete-modal');
+    pyramidCompleteModal = document.getElementById('pyramid-complete-modal');
+    levelContinueBtn = document.getElementById('level-continue-btn');
+    playAgainBtn = document.getElementById('play-again-btn');
+    nextLevelBtn = document.getElementById('next-level-btn');
 
-levelContinueBtn.addEventListener('click', () => {
-    hideLevelCompleteModal();
-    rotateRight();
-});
-
-// Next Level button - advance to harder difficulty
-if (nextLevelBtn) {
-    nextLevelBtn.addEventListener('click', () => {
-        hidePyramidCompleteModal();
-        advanceToNextLevel();
-    });
+    faces = {
+        add: document.querySelector('.face-front'),
+        subtract: document.querySelector('.face-right'),
+        multiply: document.querySelector('.face-back'),
+        divide: document.querySelector('.face-left')
+    };
 }
 
-// Play Again button - restart at level 1
-playAgainBtn.addEventListener('click', () => {
-    hidePyramidCompleteModal();
-    startNewGame();
-});
-
-document.addEventListener('keydown', (e) => {
-    switch (e.key) {
-        case 'ArrowLeft':
-            rotateLeft();
-            break;
-        case 'ArrowRight':
-            rotateRight();
-            break;
-        case 'Escape':
-            clearSelection();
-            clearFeedback();
-            break;
+function initEventListeners() {
+    if (newGameBtn) {
+        newGameBtn.addEventListener('click', () => {
+            hideLevelCompleteModal();
+            hidePyramidCompleteModal();
+            startNewGame();
+        });
     }
-});
+
+    if (rotateLeftBtn) rotateLeftBtn.addEventListener('click', rotateLeft);
+    if (rotateRightBtn) rotateRightBtn.addEventListener('click', rotateRight);
+
+    if (soundToggleBtn) soundToggleBtn.addEventListener('click', toggleSound);
+    if (musicToggleBtn) musicToggleBtn.addEventListener('click', toggleMusic);
+
+    if (levelContinueBtn) {
+        levelContinueBtn.addEventListener('click', () => {
+            hideLevelCompleteModal();
+            rotateRight();
+        });
+    }
+
+    // IMPORTANT: Next Level button advances to harder difficulty
+    if (nextLevelBtn) {
+        nextLevelBtn.addEventListener('click', () => {
+            console.log('Next Level clicked!'); // Debug
+            hidePyramidCompleteModal();
+            advanceToNextLevel();
+        });
+    }
+
+    // Play Again button restarts at level 1
+    if (playAgainBtn) {
+        playAgainBtn.addEventListener('click', () => {
+            hidePyramidCompleteModal();
+            startNewGame();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        switch (e.key) {
+            case 'ArrowLeft':
+                rotateLeft();
+                break;
+            case 'ArrowRight':
+                rotateRight();
+                break;
+            case 'Escape':
+                clearSelection();
+                clearFeedback();
+                break;
+        }
+    });
+}
 
 // ============================================
 // Initialize on Page Load
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    initDOMElements();
+    initEventListeners();
     initPyramid();
 });

@@ -619,6 +619,23 @@ body {
     cursor: not-allowed;
 }
 
+/* Dynamic font sizing for large numbers */
+.stone.small-text {
+    font-size: 0.95rem;
+}
+
+.stone.tiny-text {
+    font-size: 0.75rem;
+}
+
+.stone.target.small-text {
+    font-size: 1.1rem;
+}
+
+.stone.target.tiny-text {
+    font-size: 0.9rem;
+}
+
 /* ============================================
    ANGLED STONE EDGES - 52 degree pyramid slope
    ============================================ */
