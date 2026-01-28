@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#C9A227">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>PyraMath</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Desert scene background -->
+    <div id="desert-scene">
+        <div id="sky"></div>
+        <div id="dunes">
+            <div class="dune dune-back"></div>
+            <div class="dune dune-mid"></div>
+            <div class="dune dune-front"></div>
+        </div>
+        <div id="sand-floor"></div>
+    </div>
+
+    <!-- Stone ruins with hieroglyphics -->
+    <div class="ruin ruin-left"></div>
+    <div class="ruin ruin-right"></div>
+
+    <div id="game-container">
+        <header id="top-bar">
+            <div class="stat-box">
+                <span class="stat-label">Score</span>
+                <span id="score-value">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Streak</span>
+                <span id="streak-value">0</span>
+            </div>
+            <div class="stat-box operation-display">
+                <span id="operation-symbol">+</span>
+                <span id="operation-name">Addition</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Time</span>
+                <span id="timer-value">0:00</span>
+            </div>
+        </header>
+
+        <div id="pyramid-scene">
+            <!-- Pyramid faces - only the active face is shown -->
+            <div id="pyramid">
+                <div class="pyramid-face face-front" data-operation="add"></div>
+                <div class="pyramid-face face-right" data-operation="subtract"></div>
+                <div class="pyramid-face face-back" data-operation="multiply"></div>
+                <div class="pyramid-face face-left" data-operation="divide"></div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button id="new-game-btn">New Game</button>
+            <button id="rotate-left-btn">◀ Rotate</button>
+            <button id="rotate-right-btn">Rotate ▶</button>
+            <button id="sound-toggle-btn">🔊</button>
+            <button id="music-toggle-btn">🎵</button>
+        </div>
+
+        <div id="feedback">Find two stones that equal the target!</div>
+
+        <div id="status"></div>
+    </div>
+
+    <div id="level-complete-modal" class="modal">
+        <div class="modal-content">
+            <h2>Face Complete!</h2>
+            <p id="level-complete-message">You solved the <span id="completed-operation">Addition</span> face!</p>
+            <p>Bonus: <span id="level-bonus">+100</span></p>
+            <button id="level-continue-btn" class="modal-btn">Continue</button>
+        </div>
+    </div>
+
+    <div id="pyramid-complete-modal" class="modal">
+        <div class="modal-content">
+            <h2>🏆 Pyramid Complete! 🏆</h2>
+            <p>You solved all four faces!</p>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p>Total Time: <span id="final-time">0:00</span></p>
+            <button id="play-again-btn" class="modal-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script src="js/pyramath.js"></script>
+</body>
+</html>

@@ -1,0 +1,943 @@
+/* PyraMath - Photorealistic Egyptian Pyramid Theme */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --sand-light: #E8D5A3;
+    --sand-mid: #D4B896;
+    --sand-dark: #C4A882;
+    --sand-floor: #D8C8A0;
+    --stone-light: #CFC0A0;
+    --stone-mid: #B8A888;
+    --stone-dark: #9A8868;
+    --gold: #C9A227;
+    --gold-light: #E8C547;
+    --gold-dark: #9A7B1A;
+    --parchment: #F4E4BC;
+    --parchment-dark: #D4C49C;
+    --text-dark: #3D2914;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #87CEEB;
+}
+
+/* ============================================
+   DESERT SCENE - Photorealistic Background
+   ============================================ */
+
+#desert-scene {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+}
+
+#sky {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 55%;
+    background: linear-gradient(180deg,
+        #5BA3D0 0%,
+        #7FC1E0 25%,
+        #A8D8EA 50%,
+        #C8E6F0 75%,
+        #E8F4F8 100%
+    );
+}
+
+#dunes {
+    position: absolute;
+    bottom: 15%;
+    left: 0;
+    width: 100%;
+    height: 45%;
+}
+
+.dune {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+}
+
+.dune-back {
+    height: 180px;
+    background: linear-gradient(180deg, #D4BC8C 0%, #C8B080 100%);
+    border-radius: 80% 60% 0 0 / 100% 100% 0 0;
+    left: -30%;
+    width: 80%;
+}
+
+.dune-mid {
+    height: 150px;
+    background: linear-gradient(180deg, #DCCA98 0%, #D0BC88 100%);
+    border-radius: 50% 70% 0 0 / 100% 100% 0 0;
+    right: -20%;
+    width: 75%;
+}
+
+.dune-front {
+    height: 100px;
+    background: linear-gradient(180deg, #E4D4A4 0%, #D8C898 100%);
+    border-radius: 60% 50% 0 0 / 100% 100% 0 0;
+    left: 10%;
+    width: 100%;
+}
+
+#sand-floor {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 18%;
+    background:
+        repeating-linear-gradient(
+            85deg,
+            transparent 0px,
+            rgba(180, 160, 120, 0.15) 1px,
+            transparent 2px,
+            transparent 25px
+        ),
+        repeating-linear-gradient(
+            95deg,
+            transparent 0px,
+            rgba(160, 140, 100, 0.1) 1px,
+            transparent 2px,
+            transparent 30px
+        ),
+        linear-gradient(180deg,
+            #D8C8A0 0%,
+            #C8B890 30%,
+            #B8A880 60%,
+            #A89870 100%
+        );
+}
+
+/* ============================================
+   STONE RUINS
+   ============================================ */
+
+.ruin {
+    position: fixed;
+    bottom: 0;
+    width: 90px;
+    height: 160px;
+    z-index: 2;
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(145deg, #C8B898 0%, #A89878 100%);
+    background-blend-mode: overlay;
+}
+
+.ruin-left {
+    left: 5px;
+    clip-path: polygon(15% 0%, 100% 20%, 90% 100%, 0% 100%, 5% 40%);
+}
+
+.ruin-left::before {
+    content: 'π\Aλ\A∞';
+    white-space: pre;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.6rem;
+    color: rgba(80, 60, 40, 0.5);
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+    line-height: 1.4;
+}
+
+.ruin-right {
+    right: 5px;
+    clip-path: polygon(0% 20%, 85% 0%, 95% 40%, 100% 100%, 10% 100%);
+}
+
+.ruin-right::before {
+    content: 'Σ\Aτ\A√';
+    white-space: pre;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.6rem;
+    color: rgba(80, 60, 40, 0.5);
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+    line-height: 1.4;
+}
+
+/* ============================================
+   GAME CONTAINER
+   ============================================ */
+
+#game-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ============================================
+   TOP BAR - Golden Parchment
+   ============================================ */
+
+#top-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: linear-gradient(180deg,
+        #F8ECD0 0%,
+        var(--parchment) 30%,
+        var(--parchment-dark) 100%
+    );
+    border-radius: 10px;
+    border: 3px solid var(--gold);
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.35),
+        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -3px 6px rgba(139, 115, 85, 0.25);
+    position: relative;
+}
+
+#top-bar::before {
+    content: 'π  Σ  Δ  θ  φ  ∫  ω';
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.5rem;
+    color: #A08060;
+    opacity: 0.6;
+    letter-spacing: 2px;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 50px;
+}
+
+.stat-label {
+    font-size: 0.6rem;
+    color: #8B7355;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.stat-box span:last-child {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--text-dark);
+}
+
+.operation-display {
+    background: linear-gradient(180deg,
+        #F0D860 0%,
+        var(--gold) 40%,
+        var(--gold-dark) 100%
+    );
+    padding: 6px 20px;
+    border-radius: 20px;
+    border: 2px solid var(--gold-dark);
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+#operation-symbol {
+    font-size: 1.3rem;
+    color: var(--text-dark);
+    font-weight: bold;
+}
+
+#operation-name {
+    font-size: 0.7rem;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* ============================================
+   PYRAMID SCENE
+   ============================================ */
+
+#pyramid-scene {
+    width: 330px;
+    height: 330px;
+    perspective: 1000px;
+    perspective-origin: center 40%;
+    position: relative;
+    margin-top: 5px;
+}
+
+/* Ground shadow under pyramid */
+#pyramid-scene::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    height: 30px;
+    background: radial-gradient(ellipse at center,
+        rgba(60, 40, 20, 0.4) 0%,
+        rgba(60, 40, 20, 0.2) 40%,
+        transparent 70%
+    );
+    border-radius: 50%;
+    z-index: 0;
+}
+
+/* ============================================
+   FACE BACKGROUND - Photorealistic Stone Pyramid
+   Each face has its own pyramid background that rotates with it
+   ============================================ */
+
+.face-bg {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 310px;
+    height: 310px;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(180deg,
+            #D8C8A8 0%,
+            #C8B898 30%,
+            #B8A888 60%,
+            #A89878 100%
+        );
+    background-blend-mode: multiply;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Stone layer lines on pyramid */
+.face-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(
+            180deg,
+            transparent 0px,
+            transparent 20px,
+            rgba(80, 60, 40, 0.3) 20px,
+            rgba(80, 60, 40, 0.3) 22px
+        );
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+/* Pyramid lighting/shadow for depth */
+.face-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0.15) 0%,
+        transparent 35%,
+        rgba(0, 0, 0, 0.2) 100%
+    );
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+/* Different lighting for different faces to show 3D depth */
+.face-right .face-bg {
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(180deg,
+            #C8B898 0%,
+            #B8A888 30%,
+            #A89878 60%,
+            #988868 100%
+        );
+    background-blend-mode: multiply;
+}
+
+.face-back .face-bg {
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(180deg,
+            #B8A888 0%,
+            #A89878 30%,
+            #988868 60%,
+            #887858 100%
+        );
+    background-blend-mode: multiply;
+}
+
+.face-left .face-bg {
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(180deg,
+            #D0C0A0 0%,
+            #C0B090 30%,
+            #B0A080 60%,
+            #A09070 100%
+        );
+    background-blend-mode: multiply;
+}
+
+#pyramid {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.pyramid-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 12px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+    pointer-events: none;
+    transform: scale(0.95);
+}
+
+/* Only the active face is visible */
+.pyramid-face.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: scale(1);
+}
+
+.stone-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 2;
+}
+
+/* ============================================
+   STONES - Photorealistic Rock Texture
+   ============================================ */
+
+.stone {
+    width: 48px;
+    height: 48px;
+    margin: 0 3px;
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(160deg, #E0D0B0 0%, #C8B898 40%, #A89070 100%);
+    background-blend-mode: multiply;
+    border: none;
+    border-radius: 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.35rem;
+    font-weight: bold;
+    color: #3A2A1A;
+    text-shadow:
+        1px 1px 0 rgba(255, 255, 255, 0.6),
+        -1px -1px 0 rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow:
+        3px 4px 6px rgba(0, 0, 0, 0.5),
+        1px 1px 3px rgba(0, 0, 0, 0.3),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.35),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.15);
+    position: relative;
+}
+
+.stone:hover {
+    transform: scale(1.08);
+    box-shadow:
+        3px 4px 10px rgba(0, 0, 0, 0.5),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+        inset -1px -1px 2px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+}
+
+/* ============================================
+   TARGET STONE - Golden Capstone
+   ============================================ */
+
+.stone.target {
+    width: 54px;
+    height: 54px;
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(145deg, #E8D080 0%, #C8A848 50%, #A88830 100%);
+    background-blend-mode: soft-light;
+    font-size: 1.5rem;
+    color: #3A2A1A;
+    cursor: default;
+    box-shadow:
+        0 0 15px rgba(200, 160, 40, 0.5),
+        0 0 30px rgba(200, 160, 40, 0.25),
+        3px 4px 8px rgba(0, 0, 0, 0.4),
+        inset 1px 1px 3px rgba(255, 255, 255, 0.4),
+        inset -1px -1px 3px rgba(0, 0, 0, 0.2);
+    animation: targetPulse 2s ease-in-out infinite;
+}
+
+.stone.target:hover {
+    transform: none;
+}
+
+@keyframes targetPulse {
+    0%, 100% {
+        box-shadow:
+            0 0 15px rgba(200, 160, 40, 0.5),
+            0 0 30px rgba(200, 160, 40, 0.25),
+            3px 4px 8px rgba(0, 0, 0, 0.4),
+            inset 1px 1px 3px rgba(255, 255, 255, 0.4),
+            inset -1px -1px 3px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+        box-shadow:
+            0 0 20px rgba(200, 160, 40, 0.7),
+            0 0 40px rgba(200, 160, 40, 0.35),
+            3px 4px 8px rgba(0, 0, 0, 0.4),
+            inset 1px 1px 3px rgba(255, 255, 255, 0.4),
+            inset -1px -1px 3px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.stone.target-changed {
+    animation: targetBounce 0.4s ease;
+}
+
+@keyframes targetBounce {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* ============================================
+   SELECTED STONE
+   ============================================ */
+
+.stone.selected {
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(145deg, #F0E0A0 0%, #E0C878 100%);
+    background-blend-mode: soft-light;
+    box-shadow:
+        0 0 12px rgba(255, 215, 0, 0.7),
+        0 0 25px rgba(255, 215, 0, 0.4),
+        3px 4px 8px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+    z-index: 10;
+}
+
+/* ============================================
+   SOLVED STONE - Golden
+   ============================================ */
+
+.stone.solved {
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(145deg, #D4AF37 0%, #B89830 50%, #987820 100%);
+    background-blend-mode: soft-light;
+    color: #3A2A10;
+    cursor: default;
+    box-shadow:
+        0 0 10px rgba(212, 175, 55, 0.4),
+        0 0 20px rgba(212, 175, 55, 0.2),
+        2px 3px 6px rgba(0, 0, 0, 0.35),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.4),
+        inset -1px -1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.stone.solved:hover {
+    transform: none;
+}
+
+.stone.target.solved {
+    animation: none;
+}
+
+.stone.just-solved {
+    animation: solvePop 0.5s ease;
+}
+
+@keyframes solvePop {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+.stone.shake {
+    animation: shake 0.4s ease;
+}
+
+.stone.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   ANGLED STONE EDGES - 52 degree pyramid slope
+   ============================================ */
+
+/* Capstone - triangular pointed top */
+.stone-row[data-row="0"] .stone.target {
+    clip-path: polygon(
+        50% 0%,
+        100% 100%,
+        0% 100%
+    );
+    width: 58px;
+    height: 54px;
+    padding-top: 8px;
+}
+
+/* Left edge stones - angled left side */
+.stone-row:not([data-row="0"]) .stone:first-child {
+    clip-path: polygon(
+        12px 0%,
+        100% 0%,
+        100% 100%,
+        0% 100%
+    );
+}
+
+/* Right edge stones - angled right side */
+.stone-row:not([data-row="0"]) .stone:last-child:not(:first-child) {
+    clip-path: polygon(
+        0% 0%,
+        calc(100% - 12px) 0%,
+        100% 100%,
+        0% 100%
+    );
+}
+
+/* Row 1 (2 stones) - both edges angled */
+.stone-row[data-row="1"] .stone:first-child {
+    clip-path: polygon(
+        10px 0%,
+        100% 0%,
+        100% 100%,
+        0% 100%
+    );
+}
+
+.stone-row[data-row="1"] .stone:last-child {
+    clip-path: polygon(
+        0% 0%,
+        calc(100% - 10px) 0%,
+        100% 100%,
+        0% 100%
+    );
+}
+
+/* ============================================
+   CONTROLS
+   ============================================ */
+
+#controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#controls button {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(180deg, var(--stone-light) 0%, var(--stone-dark) 100%);
+    background-blend-mode: multiply;
+    color: var(--text-dark);
+    border: 2px solid #8B7355;
+    box-shadow:
+        2px 3px 6px rgba(0, 0, 0, 0.35),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+#controls button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        3px 5px 10px rgba(0, 0, 0, 0.4),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+#controls button:active {
+    transform: translateY(0);
+}
+
+#new-game-btn {
+    background:
+        url('../img/rock-texture.jpg') center/cover,
+        linear-gradient(180deg, var(--gold-light) 0%, var(--gold-dark) 100%);
+    background-blend-mode: soft-light;
+    border-color: var(--gold-dark);
+}
+
+#sound-toggle-btn,
+#music-toggle-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 1rem;
+}
+
+/* ============================================
+   FEEDBACK - Papyrus Scroll
+   ============================================ */
+
+#feedback {
+    min-height: 36px;
+    padding: 10px 32px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-align: center;
+    background: linear-gradient(180deg,
+        var(--parchment) 0%,
+        #E8D8A8 50%,
+        var(--parchment-dark) 100%
+    );
+    border-radius: 4px;
+    border: 2px solid #A08060;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    min-width: 280px;
+}
+
+#feedback::before,
+#feedback::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 130%;
+    background: linear-gradient(90deg,
+        #9A8060 0%,
+        #B8A070 50%,
+        #9A8060 100%
+    );
+    border-radius: 6px;
+    box-shadow:
+        inset 0 2px 3px rgba(255,255,255,0.3),
+        inset 0 -2px 3px rgba(0,0,0,0.2);
+}
+
+#feedback::before { left: -8px; }
+#feedback::after { right: -8px; }
+
+#status {
+    font-size: 0.8rem;
+    color: #7A6A50;
+    text-align: center;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+
+/* ============================================
+   MODALS
+   ============================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(20, 15, 10, 0.85);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: linear-gradient(180deg,
+        var(--parchment) 0%,
+        #E8D5A3 50%,
+        var(--parchment-dark) 100%
+    );
+    border: 4px solid var(--gold);
+    border-radius: 15px;
+    padding: 30px 45px;
+    text-align: center;
+    max-width: 90%;
+    box-shadow:
+        0 0 40px rgba(201, 162, 39, 0.4),
+        0 15px 50px rgba(0, 0, 0, 0.5);
+    animation: modalPop 0.3s ease;
+    position: relative;
+}
+
+.modal-content::before {
+    content: '∞  Δ  π  Σ';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.9rem;
+    color: var(--gold-dark);
+    letter-spacing: 8px;
+    opacity: 0.6;
+}
+
+@keyframes modalPop {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-content h2 {
+    color: var(--gold-dark);
+    margin-bottom: 15px;
+    font-size: 1.7rem;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+}
+
+.modal-content p {
+    margin: 10px 0;
+    color: var(--text-dark);
+    font-size: 1.05rem;
+}
+
+.modal-btn {
+    margin-top: 20px;
+    padding: 14px 45px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    background: linear-gradient(180deg,
+        var(--gold-light) 0%,
+        var(--gold) 50%,
+        var(--gold-dark) 100%
+    );
+    color: var(--text-dark);
+    border: 2px solid var(--gold-dark);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.modal-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 400px) {
+    #pyramid-scene {
+        width: 290px;
+        height: 290px;
+    }
+
+    .face-bg {
+        width: 270px;
+        height: 270px;
+    }
+
+    .stone {
+        width: 42px;
+        height: 42px;
+        font-size: 1.15rem;
+    }
+
+    .stone.target {
+        width: 52px;
+        height: 48px;
+        font-size: 1.3rem;
+    }
+
+    /* Adjusted angled edges for smaller screens */
+    .stone-row[data-row="0"] .stone.target {
+        width: 52px;
+        height: 48px;
+    }
+
+    .stone-row:not([data-row="0"]) .stone:first-child {
+        clip-path: polygon(10px 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+
+    .stone-row:not([data-row="0"]) .stone:last-child:not(:first-child) {
+        clip-path: polygon(0% 0%, calc(100% - 10px) 0%, 100% 100%, 0% 100%);
+    }
+
+    #top-bar {
+        padding: 8px 12px;
+    }
+
+    .stat-box span:last-child {
+        font-size: 0.95rem;
+    }
+
+    #feedback {
+        min-width: 240px;
+        font-size: 0.85rem;
+    }
+
+    #controls button {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .ruin {
+        width: 70px;
+        height: 120px;
+    }
+}
