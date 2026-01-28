@@ -496,31 +496,16 @@ function startNewGame() {
 }
 
 function advanceToNextLevel() {
-    console.log('advanceToNextLevel called, current level:', currentLevel);
-    alert('advanceToNextLevel starting! Current level: ' + currentLevel);
+    currentLevel++;
+    const levelBonus = 100 * currentLevel;
+    score += levelBonus;
+    initPyramid(true);
 
-    try {
-        currentLevel++;
-        console.log('Level incremented to:', currentLevel);
+    setFeedback(`Level Up! Welcome to Level ${currentLevel}! (+${levelBonus} bonus)`, false);
 
-        const levelBonus = 100 * currentLevel;
-        score += levelBonus;
-        console.log('Score updated:', score);
-
-        initPyramid(true);
-        console.log('initPyramid completed');
-
-        setFeedback(`Level Up! Welcome to Level ${currentLevel}! (+${levelBonus} bonus)`, false);
-
-        if (levelValue) {
-            levelValue.classList.add('level-up-animation');
-            setTimeout(() => levelValue.classList.remove('level-up-animation'), 1000);
-        }
-
-        alert('Level advanced to: ' + currentLevel);
-    } catch (error) {
-        console.error('Error in advanceToNextLevel:', error);
-        alert('ERROR: ' + error.message);
+    if (levelValue) {
+        levelValue.classList.add('level-up-animation');
+        setTimeout(() => levelValue.classList.remove('level-up-animation'), 1000);
     }
 }
 
@@ -943,27 +928,12 @@ function initEventListeners() {
         });
     }
 
-    // IMPORTANT: Next Level button advances to harder difficulty
+    // Next Level button advances to harder difficulty
     if (nextLevelBtn) {
-        console.log('Next Level button found, attaching listener');
-
-        // Try both addEventListener AND direct onclick
-        nextLevelBtn.onclick = function(e) {
-            e.preventDefault();
-            console.log('Next Level onclick fired!');
-            alert('Next Level onclick! Going to level ' + (currentLevel + 1));
+        nextLevelBtn.addEventListener('click', () => {
             hidePyramidCompleteModal();
             advanceToNextLevel();
-        };
-
-        nextLevelBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Next Level addEventListener fired!');
         });
-
-        console.log('Next Level button handlers attached');
-    } else {
-        console.error('Next Level button NOT FOUND!');
     }
 
     // Play Again button restarts at level 1
@@ -974,25 +944,18 @@ function initEventListeners() {
         });
     }
 
-    // Make the Level display clickable to advance levels (for testing)
+    // Make the Level display clickable to advance levels
     const levelBox = document.querySelector('.level-box');
     if (levelBox) {
         levelBox.style.cursor = 'pointer';
         levelBox.addEventListener('click', () => {
-            alert('Level box clicked!');
-            console.log('Level box clicked - advancing level');
             advanceToNextLevel();
         });
-        console.log('Level box click handler attached');
-    } else {
-        console.error('Level box NOT FOUND');
     }
 
     document.addEventListener('keydown', (e) => {
-        // Press 'L' to advance level (for testing)
+        // Press 'L' to advance level
         if (e.key === 'l' || e.key === 'L') {
-            alert('L key pressed!');
-            console.log('L key pressed - advancing level');
             advanceToNextLevel();
             return;
         }
@@ -1016,14 +979,7 @@ function initEventListeners() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('=== PyraMath DOMContentLoaded ===');
     initDOMElements();
-
-    // Debug: verify button exists
-    const testBtn = document.getElementById('next-level-btn');
-    console.log('Next Level button direct check:', testBtn);
-
     initEventListeners();
     initPyramid();
-    console.log('=== PyraMath Init Complete ===');
 });
