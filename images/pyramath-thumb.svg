@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#4a3f6b"/>
+    </linearGradient>
+    <linearGradient id="pyramidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4a84b"/>
+      <stop offset="50%" style="stop-color:#C9A227"/>
+      <stop offset="100%" style="stop-color:#8b7355"/>
+    </linearGradient>
+    <linearGradient id="sandGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4a84b"/>
+      <stop offset="100%" style="stop-color:#c49a3e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky background -->
+  <rect width="200" height="200" fill="url(#skyGrad)"/>
+
+  <!-- Sand dunes -->
+  <ellipse cx="100" cy="200" rx="120" ry="50" fill="url(#sandGrad)"/>
+
+  <!-- Pyramid -->
+  <polygon points="100,30 170,150 30,150" fill="url(#pyramidGrad)" stroke="#8b7355" stroke-width="2"/>
+
+  <!-- Stone lines -->
+  <line x1="65" y1="90" x2="135" y2="90" stroke="#8b7355" stroke-width="1.5" opacity="0.6"/>
+  <line x1="50" y1="120" x2="150" y2="120" stroke="#8b7355" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Math symbols -->
+  <text x="100" y="70" font-family="serif" font-size="20" fill="#1a1a2e" text-anchor="middle" font-weight="bold">+</text>
+  <text x="75" y="105" font-family="serif" font-size="16" fill="#1a1a2e" text-anchor="middle">-</text>
+  <text x="125" y="105" font-family="serif" font-size="16" fill="#1a1a2e" text-anchor="middle">x</text>
+  <text x="65" y="140" font-family="serif" font-size="14" fill="#1a1a2e" text-anchor="middle">÷</text>
+  <text x="100" y="140" font-family="serif" font-size="14" fill="#1a1a2e" text-anchor="middle">π</text>
+  <text x="135" y="140" font-family="serif" font-size="14" fill="#1a1a2e" text-anchor="middle">Σ</text>
+
+  <!-- Title -->
+  <text x="100" y="175" font-family="sans-serif" font-size="16" fill="#C9A227" text-anchor="middle" font-weight="bold">PYRAMATH</text>
+</svg>
