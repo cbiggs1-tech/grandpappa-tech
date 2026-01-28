@@ -931,14 +931,22 @@ function initEventListeners() {
     // IMPORTANT: Next Level button advances to harder difficulty
     if (nextLevelBtn) {
         console.log('Next Level button found, attaching listener');
-        nextLevelBtn.addEventListener('click', function(e) {
+
+        // Try both addEventListener AND direct onclick
+        nextLevelBtn.onclick = function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            console.log('Next Level clicked!');
-            alert('Level Up! Going to level ' + (currentLevel + 1));
+            console.log('Next Level onclick fired!');
+            alert('Next Level onclick! Going to level ' + (currentLevel + 1));
             hidePyramidCompleteModal();
             advanceToNextLevel();
+        };
+
+        nextLevelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Next Level addEventListener fired!');
         });
+
+        console.log('Next Level button handlers attached');
     } else {
         console.error('Next Level button NOT FOUND!');
     }
@@ -972,7 +980,14 @@ function initEventListeners() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('=== PyraMath DOMContentLoaded ===');
     initDOMElements();
+
+    // Debug: verify button exists
+    const testBtn = document.getElementById('next-level-btn');
+    console.log('Next Level button direct check:', testBtn);
+
     initEventListeners();
     initPyramid();
+    console.log('=== PyraMath Init Complete ===');
 });
