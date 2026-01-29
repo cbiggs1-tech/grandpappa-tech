@@ -50,6 +50,9 @@
             </div>
         </header>
 
+        <!-- Player turn display for multiplayer -->
+        <div id="player-turn-display" class="player-turn" style="display: none;">Player 1's Turn</div>
+
         <div id="pyramid-scene">
             <!-- Pyramid faces - only the active face is shown -->
             <div id="pyramid">
@@ -64,6 +67,8 @@
             <button id="new-game-btn">New Game</button>
             <button id="rotate-left-btn">◀ Rotate</button>
             <button id="rotate-right-btn">Rotate ▶</button>
+            <button id="multiplayer-toggle-btn">2P: OFF</button>
+            <button id="leaderboard-btn">🏆</button>
             <button id="sound-toggle-btn">🔊</button>
             <button id="music-toggle-btn">🎵</button>
         </div>
@@ -73,6 +78,7 @@
         <div id="status"></div>
     </div>
 
+    <!-- Level Complete Modal -->
     <div id="level-complete-modal" class="modal">
         <div class="modal-content">
             <h2>Face Complete!</h2>
@@ -82,9 +88,10 @@
         </div>
     </div>
 
+    <!-- Pyramid Complete Modal -->
     <div id="pyramid-complete-modal" class="modal">
         <div class="modal-content">
-            <h2>🏆 Pyramid Complete! 🏆</h2>
+            <h2>Pyramid Complete!</h2>
             <p>You solved all four faces!</p>
             <p>Score: <span id="final-score">0</span></p>
             <p>Time: <span id="final-time">0:00</span></p>
@@ -94,6 +101,38 @@
         </div>
     </div>
 
-    <script src="js/pyramath.js?v=6"></script>
+    <!-- Name Input Modal (for high scores) -->
+    <div id="name-input-modal" class="modal">
+        <div class="modal-content">
+            <h2>New High Score!</h2>
+            <p>Enter your name:</p>
+            <input type="text" id="player-name-input" placeholder="Player" maxlength="12" class="name-input">
+            <button id="save-score-btn" class="modal-btn">Save Score</button>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal">
+        <div class="modal-content leaderboard-content">
+            <h2>High Scores</h2>
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Lvl</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <tr><td colspan="5">No high scores yet!</td></tr>
+                </tbody>
+            </table>
+            <button id="close-leaderboard-btn" class="modal-btn">Close</button>
+        </div>
+    </div>
+
+    <script src="js/pyramath.js?v=7"></script>
 </body>
 </html>

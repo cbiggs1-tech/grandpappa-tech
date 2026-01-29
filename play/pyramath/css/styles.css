@@ -1034,3 +1034,131 @@ body {
         height: 120px;
     }
 }
+
+/* ============================================
+   MULTIPLAYER & PLAYER TURN
+   ============================================ */
+
+.player-turn {
+    text-align: center;
+    padding: 8px 16px;
+    margin: 8px auto;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    max-width: 200px;
+    animation: turnPulse 1.5s ease-in-out infinite;
+}
+
+.player-turn.player1 {
+    background: linear-gradient(180deg, #4A90D9 0%, #2A5CA8 100%);
+    color: white;
+    border: 2px solid #1A4C88;
+    box-shadow: 0 0 10px rgba(74, 144, 217, 0.5);
+}
+
+.player-turn.player2 {
+    background: linear-gradient(180deg, #D94A4A 0%, #A82A2A 100%);
+    color: white;
+    border: 2px solid #881A1A;
+    box-shadow: 0 0 10px rgba(217, 74, 74, 0.5);
+}
+
+@keyframes turnPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+#multiplayer-toggle-btn {
+    background: linear-gradient(180deg, #666 0%, #444 100%);
+    color: #ccc;
+}
+
+#multiplayer-toggle-btn.active {
+    background: linear-gradient(180deg, #4A90D9 0%, #2A5CA8 100%);
+    color: white;
+    border-color: #1A4C88;
+}
+
+/* ============================================
+   LEADERBOARD
+   ============================================ */
+
+.leaderboard-content {
+    min-width: 280px;
+    max-width: 350px;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 0.9rem;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 1px solid var(--stone-medium);
+}
+
+.leaderboard-table th {
+    background: var(--gold-dark);
+    color: white;
+    font-weight: bold;
+}
+
+.leaderboard-table tbody tr:nth-child(odd) {
+    background: rgba(201, 162, 39, 0.1);
+}
+
+.leaderboard-table tbody tr:hover {
+    background: rgba(201, 162, 39, 0.2);
+}
+
+.leaderboard-table tbody tr:first-child td {
+    font-weight: bold;
+    color: var(--gold-dark);
+}
+
+/* ============================================
+   NAME INPUT
+   ============================================ */
+
+.name-input {
+    width: 100%;
+    max-width: 200px;
+    padding: 12px 16px;
+    font-size: 1.1rem;
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-dark);
+    text-align: center;
+    margin: 10px 0;
+    font-family: inherit;
+}
+
+.name-input:focus {
+    outline: none;
+    border-color: var(--gold-dark);
+    box-shadow: 0 0 10px rgba(201, 162, 39, 0.4);
+}
+
+.name-input::placeholder {
+    color: #aaa;
+}
+
+/* ============================================
+   BUTTON ENHANCEMENTS
+   ============================================ */
+
+#leaderboard-btn {
+    font-size: 1.2rem;
+    padding: 8px 12px;
+}
+
+.muted {
+    opacity: 0.5;
+}

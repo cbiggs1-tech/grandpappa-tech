@@ -32,7 +32,7 @@ const OPERATIONS = {
     divide: {
         symbol: '÷',
         name: 'Division',
-        // Always larger / smaller, ensure integer result
+        // Always larger / smaller, floor result
         fn: (a, b) => {
             const dividend = Math.max(a, b);
             const divisor = Math.max(1, Math.min(a, b));
@@ -60,7 +60,6 @@ function getLevelRanges(level, operation) {
             { min: 10, max: 50 },     // Level 3: 10-50
             { min: 20, max: 100 },    // Level 4: 20-100
             { min: 50, max: 200 },    // Level 5: 50-200
-            { min: 75, max: 300 },    // Level 6: 75-300
         ],
         subtract: [
             { min: 5, max: 20 },      // Level 1: 5-20
@@ -68,7 +67,6 @@ function getLevelRanges(level, operation) {
             { min: 20, max: 100 },    // Level 3: 20-100
             { min: 40, max: 200 },    // Level 4: 40-200
             { min: 80, max: 400 },    // Level 5: 80-400
-            { min: 120, max: 600 },   // Level 6: 120-600
         ],
         multiply: [
             { min: 2, max: 9 },       // Level 1: 2-9 (basic times tables)
@@ -76,7 +74,6 @@ function getLevelRanges(level, operation) {
             { min: 4, max: 12 },      // Level 3: 4-12
             { min: 5, max: 15 },      // Level 4: 5-15
             { min: 6, max: 15 },      // Level 5: 6-15
-            { min: 7, max: 18 },      // Level 6: 7-18
         ],
         divide: [
             // For division, we generate factor pairs
@@ -85,35 +82,12 @@ function getLevelRanges(level, operation) {
             { minFactor: 3, maxFactor: 10, minQuotient: 3, maxQuotient: 12 },  // L3
             { minFactor: 4, maxFactor: 12, minQuotient: 4, maxQuotient: 15 },  // L4
             { minFactor: 5, maxFactor: 15, minQuotient: 5, maxQuotient: 18 },  // L5
-            { minFactor: 6, maxFactor: 18, minQuotient: 6, maxQuotient: 20 },  // L6
         ]
     };
 
     const scales = levelScaling[operation];
     const idx = Math.min(level - 1, scales.length - 1);
-    let range = { ...scales[idx] };
-
-    // For levels beyond defined ranges, scale up progressively
-    if (level > scales.length) {
-        const extraLevels = level - scales.length;
-        if (operation === 'add' || operation === 'subtract') {
-            const multiplier = Math.pow(1.5, extraLevels);
-            range.min = Math.round(range.min * multiplier);
-            range.max = Math.round(range.max * multiplier);
-        } else if (operation === 'multiply') {
-            const multiplier = Math.pow(1.2, extraLevels);
-            range.min = Math.round(range.min * multiplier);
-            range.max = Math.round(range.max * multiplier);
-        } else if (operation === 'divide') {
-            const multiplier = Math.pow(1.25, extraLevels);
-            range.minFactor = Math.round(range.minFactor * multiplier);
-            range.maxFactor = Math.round(range.maxFactor * multiplier);
-            range.minQuotient = Math.round(range.minQuotient * multiplier);
-            range.maxQuotient = Math.round(range.maxQuotient * multiplier);
-        }
-    }
-
-    return range;
+    return { ...scales[idx] };
 }
 
 // ============================================
@@ -130,6 +104,135 @@ let soundEnabled = true;
 let musicEnabled = true;
 let completedFaces = new Set();
 
+// Multiplayer state
+let isMultiplayer = false;
+let currentPlayer = 1;
+let player1Score = 0;
+let player2Score = 0;
+
+// ============================================
+// Audio System (Web Audio API)
+// ============================================
+let audioCtx = null;
+
+function getAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    return audioCtx;
+}
+
+function playTone(frequency, duration, type = 'sine', volume = 0.3) {
+    if (!soundEnabled) return;
+    try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+
+        gain.gain.setValueAtTime(volume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + duration);
+    } catch (e) {
+        console.log('Audio error:', e);
+    }
+}
+
+function playChord(frequencies, duration, type = 'sine', volume = 0.2) {
+    frequencies.forEach((freq, i) => {
+        setTimeout(() => playTone(freq, duration, type, volume), i * 80);
+    });
+}
+
+function playSoundEffect(soundName) {
+    if (!soundEnabled) return;
+
+    switch (soundName) {
+        case 'correct':
+            // Ascending chime: C-E-G
+            playChord([523.25, 659.25, 783.99], 0.3, 'sine', 0.25);
+            break;
+        case 'wrong':
+            // Descending buzz
+            playTone(200, 0.15, 'sawtooth', 0.2);
+            setTimeout(() => playTone(150, 0.15, 'sawtooth', 0.15), 100);
+            break;
+        case 'rotate':
+            // Short whoosh (noise-like)
+            playTone(800, 0.08, 'sine', 0.1);
+            playTone(600, 0.08, 'sine', 0.1);
+            break;
+        case 'levelComplete':
+            // Fanfare: 3 notes up
+            playChord([523.25, 659.25, 783.99], 0.4, 'triangle', 0.3);
+            break;
+        case 'pyramidComplete':
+            // Triumphant: 5 notes
+            const notes = [523.25, 659.25, 783.99, 880, 1046.5];
+            notes.forEach((freq, i) => {
+                setTimeout(() => playTone(freq, 0.3, 'triangle', 0.25), i * 120);
+            });
+            break;
+        case 'select':
+            playTone(440, 0.05, 'sine', 0.15);
+            break;
+    }
+}
+
+// ============================================
+// High Scores (localStorage)
+// ============================================
+const HIGHSCORE_KEY = 'pyramath_highscores';
+
+function loadHighScores() {
+    try {
+        const data = localStorage.getItem(HIGHSCORE_KEY);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveHighScores(scores) {
+    try {
+        localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(scores));
+    } catch (e) {
+        console.log('Could not save high scores:', e);
+    }
+}
+
+function addHighScore(name, scoreVal, level, time) {
+    const scores = loadHighScores();
+    scores.push({
+        name: name || 'Player',
+        score: scoreVal,
+        level: level,
+        time: time,
+        date: new Date().toLocaleDateString()
+    });
+    // Sort by score descending, keep top 10
+    scores.sort((a, b) => b.score - a.score);
+    const top10 = scores.slice(0, 10);
+    saveHighScores(top10);
+    return top10;
+}
+
+function isHighScore(scoreVal) {
+    const scores = loadHighScores();
+    if (scores.length < 10) return true;
+    return scoreVal > scores[scores.length - 1].score;
+}
+
 // ============================================
 // DOM Elements (initialized after DOM ready)
 // ============================================
@@ -137,6 +240,9 @@ let pyramid, levelValue, scoreValue, timerValue, streakValue;
 let operationSymbol, operationName, feedback, statusDisplay;
 let newGameBtn, rotateLeftBtn, rotateRightBtn, soundToggleBtn, musicToggleBtn;
 let levelCompleteModal, pyramidCompleteModal, levelContinueBtn, playAgainBtn, nextLevelBtn;
+let multiplayerToggleBtn, playerTurnDisplay;
+let leaderboardBtn, leaderboardModal, leaderboardBody, closeLeaderboardBtn;
+let nameInputModal, nameInput, saveScoreBtn;
 let faces;
 
 // ============================================
@@ -158,8 +264,6 @@ function shuffleArray(array) {
 
 // ============================================
 // Number Generation
-// Each operation generates numbers differently to ensure
-// sensible, achievable targets
 // ============================================
 
 function generateNumbersForFace(operation, level = currentLevel) {
@@ -177,23 +281,15 @@ function generateNumbersForFace(operation, level = currentLevel) {
     }
 }
 
-/**
- * Addition: Generate numbers where sums make sense
- * All stones are smaller than possible targets
- */
 function generateAdditionNumbers(level) {
     const range = getLevelRanges(level, 'add');
     const grid = [];
-
-    // Generate ALL 14 non-capstone stones as base numbers
-    // This ensures we have full control over the values
     const allNumbers = [];
     for (let i = 0; i < 14; i++) {
         allNumbers.push(randomInt(range.min, range.max));
     }
     shuffleArray(allNumbers);
 
-    // Distribute to pyramid (rows 1-4, total 14 stones)
     let idx = 0;
     for (let row = 1; row <= 4; row++) {
         grid[row] = [];
@@ -201,21 +297,13 @@ function generateAdditionNumbers(level) {
             grid[row][col] = allNumbers[idx++];
         }
     }
-
-    // Capstone (row 0) - placeholder, will be set by setInitialTarget
     grid[0] = [0];
-
     return grid;
 }
 
-/**
- * Subtraction: Generate numbers where differences are achievable
- */
 function generateSubtractionNumbers(level) {
     const range = getLevelRanges(level, 'subtract');
     const grid = [];
-
-    // Generate varied numbers for subtraction
     const allNumbers = [];
     for (let i = 0; i < 14; i++) {
         allNumbers.push(randomInt(range.min, range.max));
@@ -229,19 +317,13 @@ function generateSubtractionNumbers(level) {
             grid[row][col] = allNumbers[idx++];
         }
     }
-
     grid[0] = [0];
     return grid;
 }
 
-/**
- * Multiplication: Use smaller base numbers to avoid huge products
- */
 function generateMultiplicationNumbers(level) {
     const range = getLevelRanges(level, 'multiply');
     const grid = [];
-
-    // Keep multiplication numbers small to avoid overflow
     const allNumbers = [];
     for (let i = 0; i < 14; i++) {
         allNumbers.push(randomInt(range.min, range.max));
@@ -255,30 +337,20 @@ function generateMultiplicationNumbers(level) {
             grid[row][col] = allNumbers[idx++];
         }
     }
-
     grid[0] = [0];
     return grid;
 }
 
-/**
- * Division: Generate numbers that divide cleanly with VARIED quotients
- * Key insight: Create factor pairs (dividend, divisor) where dividend = divisor × quotient
- */
 function generateDivisionNumbers(level) {
     const range = getLevelRanges(level, 'divide');
     const grid = [];
-
-    // Generate diverse numbers that can form clean division pairs
-    // Strategy: Create numbers that are products of small factors
     const allNumbers = [];
     const usedNumbers = new Set();
 
-    // Generate varied products to ensure diverse quotients
     for (let i = 0; i < 14; i++) {
         let num;
         let attempts = 0;
         do {
-            // Create a product of two factors to ensure clean division
             const factor1 = randomInt(range.minFactor, range.maxFactor);
             const factor2 = randomInt(range.minQuotient, range.maxQuotient);
             num = factor1 * factor2;
@@ -298,7 +370,6 @@ function generateDivisionNumbers(level) {
             grid[row][col] = allNumbers[idx++];
         }
     }
-
     grid[0] = [0];
     return grid;
 }
@@ -330,11 +401,9 @@ function populateFace(faceElement, operation) {
             stone.dataset.value = grid[rowIndex][col];
             stone.textContent = grid[rowIndex][col];
 
-            // Capstone (row 0) is the target display
             if (rowIndex === 0) {
                 stone.classList.add('target');
             } else {
-                // Dynamic font sizing for large numbers
                 const numStr = String(grid[rowIndex][col]);
                 if (numStr.length >= 5) {
                     stone.classList.add('tiny-text');
@@ -350,34 +419,27 @@ function populateFace(faceElement, operation) {
         faceElement.appendChild(row);
     });
 
-    // Set initial target from possible pairs
     setInitialTarget(faceElement, operation);
 }
 
-/**
- * Set the initial capstone target based on possible pairs
- * For addition: pick targets that are >= max stone value (makes intuitive sense)
- */
 function setInitialTarget(faceElement, operation) {
     const possibleTargets = getAllPossibleResults(faceElement, operation);
-    const unsolvedStones = faceElement.querySelectorAll('.stone:not(.target)');
 
     if (possibleTargets.length > 0) {
         let validTargets = possibleTargets;
+        const unsolvedStones = faceElement.querySelectorAll('.stone:not(.target)');
 
-        // For addition, filter to targets >= max stone value
-        // This prevents confusing scenarios like "target is 5 but there's a 12 on the board"
         if (operation === 'add') {
             const maxStone = Math.max(...Array.from(unsolvedStones).map(s => parseInt(s.dataset.value)));
             validTargets = possibleTargets.filter(t => t >= maxStone);
-            if (validTargets.length === 0) validTargets = possibleTargets; // fallback
+            if (validTargets.length === 0) validTargets = possibleTargets;
         }
 
-        // For division, targets must be > 0 (0 is impossible) and prefer > 1
+        // For division, filter out 0 targets (impossible)
         if (operation === 'divide') {
             const nonZero = possibleTargets.filter(t => t > 0);
             const nonTrivial = nonZero.filter(t => t > 1);
-            validTargets = nonTrivial.length > 0 ? nonTrivial : nonZero;
+            validTargets = nonTrivial.length > 0 ? nonTrivial : (nonZero.length > 0 ? nonZero : possibleTargets);
         }
 
         const target = validTargets[randomInt(0, validTargets.length - 1)];
@@ -385,7 +447,6 @@ function setInitialTarget(faceElement, operation) {
         capstone.dataset.value = target;
         capstone.textContent = target;
 
-        // Dynamic font sizing for capstone too
         const numStr = String(target);
         capstone.classList.remove('tiny-text', 'small-text');
         if (numStr.length >= 5) {
@@ -398,6 +459,8 @@ function setInitialTarget(faceElement, operation) {
 
 /**
  * Get all possible results from pairing unsolved stones
+ * CRITICAL FIX: Use the same operation function for all operations
+ * This ensures division pairs match what checkSelectedPair accepts
  */
 function getAllPossibleResults(faceElement, operation) {
     const unsolvedStones = faceElement.querySelectorAll('.stone:not(.solved):not(.target)');
@@ -409,26 +472,15 @@ function getAllPossibleResults(faceElement, operation) {
         for (let j = i + 1; j < stones.length; j++) {
             const a = parseInt(stones[i].dataset.value);
             const b = parseInt(stones[j].dataset.value);
-
-            // For division, only include clean integer results
-            if (operation === 'divide') {
-                const dividend = Math.max(a, b);
-                const divisor = Math.max(1, Math.min(a, b));
-                if (divisor > 0 && dividend % divisor === 0) {
-                    results.add(Math.floor(dividend / divisor));
-                }
-            } else {
-                results.add(opFn(a, b));
-            }
+            // Use the same operation function for consistency
+            const result = opFn(a, b);
+            results.add(result);
         }
     }
 
     return Array.from(results);
 }
 
-/**
- * Find all pairs that produce a specific target value
- */
 function findPairsForTarget(faceElement, operation, target) {
     const unsolvedStones = faceElement.querySelectorAll('.stone:not(.solved):not(.target)');
     const pairs = [];
@@ -454,24 +506,29 @@ function findPairsForTarget(faceElement, operation, target) {
 // Game Initialization
 // ============================================
 
+const MAX_LEVEL = 5;
+
 function initPyramid(keepScore = false) {
     currentFaceIndex = 0;
     if (!keepScore) {
         score = 0;
+        player1Score = 0;
+        player2Score = 0;
     }
     streak = 0;
     selectedStones = [];
     elapsedSeconds = 0;
     completedFaces = new Set();
+    currentPlayer = 1;
 
     updateLevelDisplay();
     updateScoreDisplay();
     updateStreakDisplay();
     updateTimerDisplay();
     updateOperationDisplay();
+    updatePlayerTurnDisplay();
     clearFeedback();
 
-    // Populate all faces with numbers
     Object.keys(faces).forEach(operation => {
         populateFace(faces[operation], operation);
     });
@@ -493,11 +550,8 @@ function startNewGame() {
     initPyramid(false);
 }
 
-const MAX_LEVEL = 5;
-
 function advanceToNextLevel() {
     if (currentLevel >= MAX_LEVEL) {
-        // Already at max level - just restart same level
         setFeedback(`You've mastered Level ${MAX_LEVEL}! Play again for a higher score!`, false);
         initPyramid(true);
         return;
@@ -506,6 +560,10 @@ function advanceToNextLevel() {
     currentLevel++;
     const levelBonus = 100 * currentLevel;
     score += levelBonus;
+    if (isMultiplayer) {
+        if (currentPlayer === 1) player1Score += levelBonus;
+        else player2Score += levelBonus;
+    }
     initPyramid(true);
 
     if (currentLevel === MAX_LEVEL) {
@@ -553,6 +611,7 @@ function handleStoneClick(stone) {
 
         stone.classList.add('selected');
         selectedStones.push(stone);
+        playSoundEffect('select');
 
         if (selectedStones.length === 2) {
             checkSelectedPair();
@@ -576,20 +635,6 @@ function checkSelectedPair() {
 
     const result = opData.fn(valA, valB);
 
-    // For division, check if it's clean
-    if (operation === 'divide') {
-        const dividend = Math.max(valA, valB);
-        const divisor = Math.max(1, Math.min(valA, valB));
-        if (dividend % divisor !== 0) {
-            setFeedback(`${dividend} ${opData.symbol} ${divisor} doesn't divide evenly!`, true);
-            streak = 0;
-            updateStreakDisplay();
-            shakeStones(selectedStones);
-            clearSelection();
-            return;
-        }
-    }
-
     if (result === target) {
         handleCorrectPair(stoneA, stoneB, valA, valB, result, operation, opData);
     } else {
@@ -604,6 +649,12 @@ function handleCorrectPair(stoneA, stoneB, valA, valB, result, operation, opData
     const basePoints = 10 + (streak * 5);
     const points = basePoints * currentLevel;
     score += points;
+
+    if (isMultiplayer) {
+        if (currentPlayer === 1) player1Score += points;
+        else player2Score += points;
+    }
+
     streak++;
 
     updateScoreDisplay();
@@ -614,9 +665,16 @@ function handleCorrectPair(stoneA, stoneB, valA, valB, result, operation, opData
     } else {
         setFeedback(`✓ ${valA} ${opData.symbol} ${valB} = ${result}! (+${points})`, false);
     }
-    playSound('correct');
+    playSoundEffect('correct');
 
     clearSelection();
+
+    // Switch player on correct answer in multiplayer
+    if (isMultiplayer) {
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        updatePlayerTurnDisplay();
+    }
+
     updateCapstoneToNewTarget(operation);
 }
 
@@ -626,8 +684,9 @@ function handleWrongPair(valA, valB, result, target, opData) {
 
     setFeedback(`✗ ${valA} ${opData.symbol} ${valB} = ${result}, not ${target}. Try again!`, true);
     shakeStones(selectedStones);
-    playSound('wrong');
+    playSoundEffect('wrong');
 
+    // No turn switch on wrong answer in multiplayer
     clearSelection();
 }
 
@@ -641,15 +700,15 @@ function updateCapstoneToNewTarget(operation) {
         capstone.textContent = '✓';
         handleFaceComplete(operation);
     } else {
-        // For division, targets must be > 0 (0 is impossible) and prefer > 1
         let validTargets = possibleTargets;
+
+        // For division, filter out 0 targets
         if (operation === 'divide') {
             const nonZero = possibleTargets.filter(t => t > 0);
             const nonTrivial = nonZero.filter(t => t > 1);
-            validTargets = nonTrivial.length > 0 ? nonTrivial : nonZero;
+            validTargets = nonTrivial.length > 0 ? nonTrivial : (nonZero.length > 0 ? nonZero : possibleTargets);
         }
 
-        // For addition, prefer larger targets
         if (operation === 'add') {
             const unsolvedStones = faceElement.querySelectorAll('.stone:not(.solved):not(.target)');
             const maxStone = Math.max(...Array.from(unsolvedStones).map(s => parseInt(s.dataset.value)));
@@ -661,7 +720,6 @@ function updateCapstoneToNewTarget(operation) {
         capstone.dataset.value = newTarget;
         capstone.textContent = newTarget;
 
-        // Dynamic font sizing
         const numStr = String(newTarget);
         capstone.classList.remove('tiny-text', 'small-text');
         if (numStr.length >= 5) {
@@ -705,14 +763,18 @@ function handleFaceComplete(operation) {
 
     const faceBonus = 50 * currentLevel;
     score += faceBonus;
+    if (isMultiplayer) {
+        if (currentPlayer === 1) player1Score += faceBonus;
+        else player2Score += faceBonus;
+    }
     updateScoreDisplay();
 
     if (completedFaces.size === 4) {
         stopTimer();
-        playSound('pyramidComplete');
+        playSoundEffect('pyramidComplete');
         setTimeout(() => showPyramidCompleteModal(), 800);
     } else {
-        playSound('levelComplete');
+        playSoundEffect('levelComplete');
         showLevelCompleteModal(operation);
     }
 }
@@ -734,6 +796,7 @@ function rotatePyramidTo(faceIndex) {
     updateOperationDisplay();
     clearSelection();
     clearFeedback();
+    playSoundEffect('rotate');
 
     if (completedFaces.has(operation)) {
         setStatus('✓ This face is complete! Rotate to continue.');
@@ -762,7 +825,11 @@ function updateLevelDisplay() {
 }
 
 function updateScoreDisplay() {
-    if (scoreValue) scoreValue.textContent = score;
+    if (isMultiplayer) {
+        if (scoreValue) scoreValue.textContent = `P1:${player1Score} P2:${player2Score}`;
+    } else {
+        if (scoreValue) scoreValue.textContent = score;
+    }
 }
 
 function updateStreakDisplay() {
@@ -782,6 +849,18 @@ function updateOperationDisplay() {
     const opData = OPERATIONS[operation];
     if (operationSymbol) operationSymbol.textContent = opData.symbol;
     if (operationName) operationName.textContent = opData.name;
+}
+
+function updatePlayerTurnDisplay() {
+    if (playerTurnDisplay) {
+        if (isMultiplayer) {
+            playerTurnDisplay.textContent = `Player ${currentPlayer}'s Turn`;
+            playerTurnDisplay.style.display = 'block';
+            playerTurnDisplay.className = `player-turn player${currentPlayer}`;
+        } else {
+            playerTurnDisplay.style.display = 'none';
+        }
+    }
 }
 
 function setFeedback(message, isError = false) {
@@ -842,24 +921,103 @@ function showPyramidCompleteModal() {
     const finalTimeEl = document.getElementById('final-time');
     const levelUpMsg = document.getElementById('level-up-message');
 
-    if (finalScoreEl) finalScoreEl.textContent = score;
+    if (isMultiplayer) {
+        if (finalScoreEl) {
+            const winner = player1Score > player2Score ? 'Player 1' :
+                          player2Score > player1Score ? 'Player 2' : 'Tie';
+            finalScoreEl.textContent = `P1: ${player1Score} | P2: ${player2Score} (${winner} wins!)`;
+        }
+    } else {
+        if (finalScoreEl) finalScoreEl.textContent = score;
+    }
+
     if (finalTimeEl && timerValue) finalTimeEl.textContent = timerValue.textContent;
 
     if (levelUpMsg) {
-        const nextLevel = currentLevel + 1;
-        const nextLevelName = getLevelName(nextLevel);
-        levelUpMsg.textContent = `Level Up! Ready for Level ${nextLevel} (${nextLevelName})?`;
+        if (currentLevel >= MAX_LEVEL) {
+            levelUpMsg.textContent = `You've mastered all levels!`;
+        } else {
+            const nextLevel = currentLevel + 1;
+            const nextLevelName = getLevelName(nextLevel);
+            levelUpMsg.textContent = `Level Up! Ready for Level ${nextLevel} (${nextLevelName})?`;
+        }
     }
 
-    if (pyramidCompleteModal) pyramidCompleteModal.classList.add('active');
+    // Check for high score (single player only)
+    if (!isMultiplayer && isHighScore(score)) {
+        showNameInputModal();
+    } else {
+        if (pyramidCompleteModal) pyramidCompleteModal.classList.add('active');
+    }
 }
 
 function hidePyramidCompleteModal() {
     if (pyramidCompleteModal) pyramidCompleteModal.classList.remove('active');
 }
 
+function showNameInputModal() {
+    if (nameInputModal) {
+        nameInputModal.classList.add('active');
+        if (nameInput) {
+            nameInput.value = '';
+            nameInput.focus();
+        }
+    }
+}
+
+function hideNameInputModal() {
+    if (nameInputModal) nameInputModal.classList.remove('active');
+}
+
+function showLeaderboardModal() {
+    const scores = loadHighScores();
+    if (leaderboardBody) {
+        if (scores.length === 0) {
+            leaderboardBody.innerHTML = '<tr><td colspan="5">No high scores yet!</td></tr>';
+        } else {
+            leaderboardBody.innerHTML = scores.map((s, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${s.name}</td>
+                    <td>${s.score}</td>
+                    <td>L${s.level}</td>
+                    <td>${formatTime(s.time)}</td>
+                </tr>
+            `).join('');
+        }
+    }
+    if (leaderboardModal) leaderboardModal.classList.add('active');
+}
+
+function hideLeaderboardModal() {
+    if (leaderboardModal) leaderboardModal.classList.remove('active');
+}
+
+function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 // ============================================
-// Sound Functions (Placeholders)
+// Multiplayer Toggle
+// ============================================
+
+function toggleMultiplayer() {
+    isMultiplayer = !isMultiplayer;
+    if (multiplayerToggleBtn) {
+        multiplayerToggleBtn.textContent = isMultiplayer ? '2P: ON' : '2P: OFF';
+        multiplayerToggleBtn.classList.toggle('active', isMultiplayer);
+    }
+    updatePlayerTurnDisplay();
+    updateScoreDisplay();
+
+    // Restart game when toggling multiplayer
+    startNewGame();
+}
+
+// ============================================
+// Sound Functions
 // ============================================
 
 function toggleSound() {
@@ -879,8 +1037,7 @@ function toggleMusic() {
 }
 
 function playSound(soundName) {
-    if (!soundEnabled) return;
-    console.log('Play sound:', soundName);
+    playSoundEffect(soundName);
 }
 
 // ============================================
@@ -903,12 +1060,23 @@ function initDOMElements() {
     rotateRightBtn = document.getElementById('rotate-right-btn');
     soundToggleBtn = document.getElementById('sound-toggle-btn');
     musicToggleBtn = document.getElementById('music-toggle-btn');
+    multiplayerToggleBtn = document.getElementById('multiplayer-toggle-btn');
+    playerTurnDisplay = document.getElementById('player-turn-display');
 
     levelCompleteModal = document.getElementById('level-complete-modal');
     pyramidCompleteModal = document.getElementById('pyramid-complete-modal');
     levelContinueBtn = document.getElementById('level-continue-btn');
     playAgainBtn = document.getElementById('play-again-btn');
     nextLevelBtn = document.getElementById('next-level-btn');
+
+    leaderboardBtn = document.getElementById('leaderboard-btn');
+    leaderboardModal = document.getElementById('leaderboard-modal');
+    leaderboardBody = document.getElementById('leaderboard-body');
+    closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
+
+    nameInputModal = document.getElementById('name-input-modal');
+    nameInput = document.getElementById('player-name-input');
+    saveScoreBtn = document.getElementById('save-score-btn');
 
     faces = {
         add: document.querySelector('.face-front'),
@@ -932,6 +1100,7 @@ function initEventListeners() {
 
     if (soundToggleBtn) soundToggleBtn.addEventListener('click', toggleSound);
     if (musicToggleBtn) musicToggleBtn.addEventListener('click', toggleMusic);
+    if (multiplayerToggleBtn) multiplayerToggleBtn.addEventListener('click', toggleMultiplayer);
 
     if (levelContinueBtn) {
         levelContinueBtn.addEventListener('click', () => {
@@ -940,7 +1109,6 @@ function initEventListeners() {
         });
     }
 
-    // Next Level button advances to harder difficulty
     if (nextLevelBtn) {
         nextLevelBtn.addEventListener('click', () => {
             hidePyramidCompleteModal();
@@ -948,7 +1116,6 @@ function initEventListeners() {
         });
     }
 
-    // Play Again button restarts at level 1
     if (playAgainBtn) {
         playAgainBtn.addEventListener('click', () => {
             hidePyramidCompleteModal();
@@ -956,7 +1123,38 @@ function initEventListeners() {
         });
     }
 
-    // Make the Level display clickable to advance levels
+    if (leaderboardBtn) {
+        leaderboardBtn.addEventListener('click', showLeaderboardModal);
+    }
+
+    if (closeLeaderboardBtn) {
+        closeLeaderboardBtn.addEventListener('click', hideLeaderboardModal);
+    }
+
+    if (saveScoreBtn) {
+        saveScoreBtn.addEventListener('click', () => {
+            const name = nameInput ? nameInput.value.trim() || 'Player' : 'Player';
+            addHighScore(name, score, currentLevel, elapsedSeconds);
+            hideNameInputModal();
+            if (pyramidCompleteModal) pyramidCompleteModal.classList.add('active');
+        });
+    }
+
+    if (nameInput) {
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveScoreBtn.click();
+            }
+        });
+    }
+
+    // Click outside modal to close
+    if (leaderboardModal) {
+        leaderboardModal.addEventListener('click', (e) => {
+            if (e.target === leaderboardModal) hideLeaderboardModal();
+        });
+    }
+
     const levelBox = document.querySelector('.level-box');
     if (levelBox) {
         levelBox.style.cursor = 'pointer';
@@ -966,7 +1164,6 @@ function initEventListeners() {
     }
 
     document.addEventListener('keydown', (e) => {
-        // Press 'L' to advance level
         if (e.key === 'l' || e.key === 'L') {
             advanceToNextLevel();
             return;
@@ -981,6 +1178,7 @@ function initEventListeners() {
             case 'Escape':
                 clearSelection();
                 clearFeedback();
+                hideLeaderboardModal();
                 break;
         }
     });
